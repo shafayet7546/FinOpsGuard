@@ -1,0 +1,28 @@
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*.class
+
+# Environment variables (we'll create .env later for secrets)
+.env
+.env.*
+
+# Terraform state (never commit)
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform/
+
+# IDE / OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs & temp
+*.log
