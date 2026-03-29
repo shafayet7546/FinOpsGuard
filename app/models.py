@@ -15,7 +15,7 @@ class HealthResponse(BaseModel):
             }
         },
     )
-    # health status is mock for now, will implement actual health checks soon
+    # health status is set to default value for now
     status: Literal["healthy", "degraded"] = Field(
         default="healthy", description="Overall health status of the service"
     )
@@ -50,7 +50,6 @@ class CloudMetricsResponse(BaseModel):
 
 class CarbonReportResponse(BaseModel):
     """Carbon impact assessment - returned by GET /carbon endpoint"""
-
     model_config = ConfigDict(
         extra="forbid",
         json_schema_extra={
@@ -61,7 +60,7 @@ class CarbonReportResponse(BaseModel):
             }
         },
     )
-
+    # strict field validations  
     carbon_score: Literal["low", "medium", "high"] = Field(
         ..., description="Carbon impact score based on emissions"
     )

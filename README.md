@@ -21,71 +21,82 @@
   <img src="https://img.shields.io/badge/Security-Trivy-red" />
 </p>
 
->**Current Status**
-> - Contract-first API and schema validation implemented.  
-> - Data integration, infrastructure, and deployment layers are in progress.
+## FinOpsGuard
 
-## Overview
+**FinOpsGuard** is a cloud-native AWS FinOps platform that unifies cost monitoring, carbon-impact estimation, and proactive budget governance to help organizations reduce cloud waste, strengthen financial accountability, and enable more automated, sustainability-aware cloud operations at scale.
 
-**FinOpsGuard** is a cloud-native platform for monitoring AWS cloud costs and estimating infrastructure carbon emissions, enabling engineers to identify cost optimization and sustainability opportunities.
+## Why FinOpsGuard?
 
-### API Design:
-The platform employs a contract-first FastAPI service with strictly validated schemas, exposing endpoints for cost analysis, carbon estimation, and optimization insights.
-The system is architected to provide engineers clear visibility into both the financial and environmental dimensions of their infrastructure. 
+Cloud cost monitoring, budget governance, and sustainability insights are often fragmented across separate tools and workflows, limiting timely visibility into inefficiencies and making optimization more reactive than strategic. FinOpsGuard was built to address this gap by consolidating these signals into a unified operational workflow.
 
-### Architecture (in progress): 
-Built using FastAPI and Pydantic, with planned integration of Terraform (IaC), Docker, Kubernetes (EKS), and GitHub Actions for deployment, automation, and scalability.
 
-### Design Decisions:
+## Implemented Capabilities
 
-**Strict scheme validation (`extra='forbid'`) on all models**
-Pydantic models enforce strict schemas. Unknown or unexpected fields are rejected rather than silently ignored, ensuring predictable and secure API contract.
+- **Cloud-native Project Foundation** — Repository organization is structured to support planned future infrastructure automation (Terraform), containerization (Docker/Kubernetes), CI/CD, testing, and observability.
 
-**Pinned dependencies (`==` not `>=`)**
-Ensures consistent environments across local development, CI pipelines, and production containers.
+- **API** — FastAPI backend with validated request/response models and automatic OpenAPI documentation. Core endpoints (`/health`, `/costs`, `/carbon`, `/report`) are defined with structured schemas.
 
----
+- **Enforced Schema Validation** — Strict data contracts enforced using Pydantic models for predictable type-safe behavior (`extra="forbid"`).
 
-### Tech Stack (Current)
+- **Persistence Layer** — SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return data through Pydantic response models.
+
+## Roadmap
+- AWS cost ingestion and carbon estimation logic
+- PDF report generation and S3 storage
+- Infrastructure provisioning with Terraform
+- Docker + Kubernetes (EKS) deployment
+- GitHub Actions CI/CD pipeline
+- Observability (Prometheus + Grafana)
+- Security scanning (Trivy) (**planned, but subject to change**)
+
+
+## Architecture and Technology
+
+### Current Implementation
 
 | Layer | Technology |
 |------|------------|
 | Backend | FastAPI (Python) |
 | Validation | Pydantic v2 |
+| Persistence | SQLite + SQLAlchemy ORM |
 
-### Tech Stack (Planned Integration)
+
+### Target Platform
+
 | Layer | Technology |
 |------|------------|
-| Infrastructure (planned) | Terraform |
-| Containerization (planned) | Docker |
-| Orchestration (planned) | Kubernetes (EKS) |
-| CI/CD (planned) | GitHub Actions |
-| Observability (planned) | Prometheus, Grafana |
-| Security (planned) | Trivy |
+| Infrastructure  | Terraform |
+| Containerization  | Docker |
+| Orchestration  | Kubernetes (EKS) |
+| CI/CD  | GitHub Actions |
+| Observability  | Prometheus, Grafana |
+| Security  | Trivy |
 
----
+---  
+## Design Principles & Engineering Decisions  
 
-## Features
+### Principles
+- **Automation-oriented operations** — repetitive monitoring, reporting, and governance workflows should be designed for automation to reduce manual overhead, improve consistency, and support operational scaling.
+- **Unified visibility** — cost, budget, and carbon signals should be accessible in one operational workflow.
+- **Proactive decision-making** — teams should be alerted in advance to inefficiencies and budget threshold hits before they do become larger operational problems.
+- **Actionable outputs** — insights should translate into recommendations that support cost-efficient, and sustainability-aware infrastructure decisions over time.
+- **Cloud-native extensibility** — the platform should be designed to evolve toward containerized, observable, and automated deployment patterns.
 
-### Current
+### Decisions
 
-- **Project Structure** — Repository currently organized with planned scalability, with dedicated directories for API, infrastructure (Terraform), containerization (Docker/Kubernetes), CI/CD, testing, and documentation.
+- **Strict Pydantic validation on all response models**  
+ All models enforce `extra='forbid'` to reject unexpected fields. `Field()` validators are used to enforce rules including non-negative values (`ge=0`), percentage ranges (`le=100`), minimum lengths, and semantic version patterns. 
 
-- **API** — FastAPI backend with validated request/response models and automatic OpenAPI documentation. Core endpoints (/health, /costs, /carbon, /report) are defined with structured schemas; data integration is in progress.
+- **Separation of concerns between API and database models**  
+Pydantic models define the public API contract, while SQLAlchemy ORM models handle persistence concerns. This separation improves maintainability and makes future migration to managed databases such as Amazon RDS, seamless.
 
-- **Enforced Schema Validation** — Strict data contracts enforced using Pydantic models for predictable type safe behavior (extra="forbid")
+- **SQLite with SQLAlchemy ORM for persistence**  
+SQLite was selected for the current phase to support local-first development, rapid iteration, and low operational overhead. Planned integration of AWS storage solutions.
 
-### Planned
-- Integrate AWS cost ingestion
-- Implement carbon estimation logic
-- Add report generation and storage
-- Provision infrastructure with Terraform
-- Deploy with Docker and Kubernetes
-- Implement CI/CD automation
-- Add observability and monitoring
-- Integrate security scanning
+- **Pinned dependencies in requirements.txt**  
+Exact dependency pinning ensures reproducibility across local development, CI/CD pipelines, and future container deployments.
 
----
+
 
 ## Prerequisites
 
@@ -93,12 +104,10 @@ Ensures consistent environments across local development, CI pipelines, and prod
 - pip
 - Git
 
----
-
 ## Environment
 
-Development is being performed in **Linux environment**, as project is intended to align with cloud-native workflows. 
-> Disclaimer: The application can be run on both Linux and Windows systems. Please follow the respective instructions below for your OS:
+Development note: Primary development was performed on **Linux**, as project is intended to align with cloud-native workflows. 
+> Disclaimer: The application can be also be ran on Windows systems. Please follow the appropriate virtual environment activation command below:
 
 
 ## Quick Start
@@ -110,36 +119,36 @@ python -m venv venv
 
 # Linux | macOS
 source venv/bin/activate
-# Windows
-1. Open **Powershell as Administrator**
-2. Run: venv\Scripts\activate
+
+# Windows (Powershell as Administrator)
+venv\Scripts\activate
 
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload
 ```
-#### Access Swagger UI: https://localhost:(port)/docs
-
-#### Example of url: http://localhost:8000/docs
+#### Access Swagger UI (default port): http://localhost:8000/docs
+#### Alternative Format: http://localhost:(port)/docs
 
 ---
 
 ### API Endpoints
 
-| Method | Endpoint | Description                  |
-|--------|----------|------------------------------|
-| GET    | /health  | Service health check (default/data pending)|
-| GET    | /costs   | Monthly cloud cost metrics (mock/data pending)|
-| GET    | /carbon  | Carbon footprint assessment  (mock/data pending)|
-| GET    | /report  | PDF report generation status (mock/data pending)|
+| Method | Endpoint | Purpose | Current Status |
+|--------|----------|---------|----------------|
+| GET | /health | Service health check | Static response |
+| GET | /costs | Returns Monthly cloud cost metrics | Backed by SQLite |
+| GET | /carbon | Returns Infrastructure Carbon-impact Assessment | Backed by SQLite |
+| GET | /report | Returns generated PDF summary report: Cost, Carbon, and Optimization metrics. | Placeholder response |
 
----
 
 ## Repository Structure
 ```
 finopsguard/
 ├── app/
 │   ├── main.py           # FastAPI entry point and route definitions
-│   └── models.py         # Pydantic v2 response models
+│   ├── models.py         # Pydantic v2 response models
+│   ├── database.py       # SQLite connection and session management
+│   └── db_models.py      # SQLAlchemy ORM models (Cost, Carbon)
 ├── terraform/            # IaC — VPC, EKS, RDS, S3, IAM
 ├── k8s/                  # Helm charts + ArgoCD manifests
 ├── lambda/               # AWS Lambda functions for cost/carbon processing
