@@ -17,7 +17,7 @@ def get_db():
 
 app = FastAPI(
     title="FinOpsGuard",
-    description="Monitor cloud cost, assess infrastructure carbon impact, and receive automated budget alerts with actionable optimization recommendations.",
+    description= "Guard your cloud spend and sustainability— monitor costs, assess infrastructure carbon impact, and receive automated alerts with actionable optimization insights.",
     version="1.0.0",
     docs_url="/docs",
 )

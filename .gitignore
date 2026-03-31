@@ -26,3 +26,9 @@ terraform/.terraform/
 
 # Logs & temp
 *.log
+
+# SQLite db files
+*.db
+finopsguard.db
+*.sqite
+*.sqlite3
