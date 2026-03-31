@@ -4,7 +4,7 @@ from app.database import Base
 # table in database for /cost api
 class Cost(Base):
     '''Stores monthly cloud spend and carbon metrics'''
-    table_name = "costs"
+    __tablename__ = "costs"
     id = Column(Integer, primary_key=True, index=True)
     month = Column(String, index=True)
     aws_spend = Column(Float)
@@ -13,7 +13,7 @@ class Cost(Base):
 
 class Carbon(Base):
     """Stores carbon score and applicable recommendation"""
-    table_name = "carbon_report"
+    __tablename__= "carbon_report"
     id = Column(Integer, primary_key=True, index=True)
     carbon_score = Column(String)
     kg_co2 = Column(Float)
