@@ -32,3 +32,8 @@ terraform/.terraform/
 finopsguard.db
 *.sqite
 *.sqlite3
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*

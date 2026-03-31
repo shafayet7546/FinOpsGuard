@@ -29,3 +29,9 @@ resource "aws_iam_role" "app_user_role" {
         }]
     })
 }
+
+resource "random_string" suffix {
+    length = 8
+    special = false
+    upper = false
+}
