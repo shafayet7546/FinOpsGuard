@@ -32,13 +32,15 @@ Cloud cost monitoring, budget governance, and sustainability insights are often 
 
 ## Implemented Capabilities
 
-- **Cloud-native Project Foundation** — Repository organization is structured to support planned future infrastructure automation (Terraform), containerization (Docker/Kubernetes), CI/CD, testing, and observability.
+- **Cloud-native Project Foundation**: Repository is structured to support planned future infrastructure automation (Terraform), containerization (Docker/Kubernetes), CI/CD, testing, and observability.
 
-- **API** — FastAPI backend with validated request/response models and automatic OpenAPI documentation. Core endpoints (`/health`, `/costs`, `/carbon`, `/report`) are defined with structured schemas.
+- **API**: Developed FastAPI REST API with validated request/response models and automatic OpenAPI documentation. Core endpoints (`/health`, `/costs`, `/carbon`, `/report`) are defined with structured schemas.
 
-- **Enforced Schema Validation** — Strict data contracts enforced using Pydantic models for predictable type-safe behavior (`extra="forbid"`).
+- **Schema Validation**: Enforced Strict data contracts enforced using Pydantic models for rejecting unexpected fields and maintaining consistent API behavior(`extra="forbid"`).
 
-- **Persistence Layer** — SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return data through Pydantic response models.
+- **Persistence Layer**: SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return data through Pydantic models.
+
+- **Infrastructure as Code (Terraform)**: Provisioned AWS infrastructure using Terraform, including a VPC for network isolation, an S3 bucket for report storage, and an IAM role for secure service access. Structured the configuration into dedicated files for provisioning, variables, outputs, and core resource definitions (main.tf) to improve maintainability and separation of concerns.
 
 ## Roadmap
 - AWS cost ingestion and carbon estimation logic
@@ -76,15 +78,24 @@ Cloud cost monitoring, budget governance, and sustainability insights are often 
 ## Design Principles & Engineering Decisions  
 
 ### Principles
-- **Automation-oriented operations** — repetitive monitoring, reporting, and governance workflows should be designed for automation to reduce manual overhead, improve consistency, and support operational scaling.
-- **Unified visibility** — cost, budget, and carbon signals should be accessible in one operational workflow.
-- **Proactive decision-making** — teams should be alerted in advance to inefficiencies and budget threshold hits before they do become larger operational problems.
-- **Actionable outputs** — insights should translate into recommendations that support cost-efficient, and sustainability-aware infrastructure decisions over time.
-- **Cloud-native extensibility** — the platform should be designed to evolve toward containerized, observable, and automated deployment patterns.
+- **Automation-oriented operations**  
+Repetitive monitoring, reporting, and governance workflows should be designed for automation to reduce manual overhead, improve consistency, and support operational scaling.
+
+- **Unified visibility**  
+Cost, Budget, and Carbon signals should be accessible in one operational workflow.
+
+- **Proactive decision-making**  
+Teams should be alerted in advance to inefficiencies and budget threshold hits before they do become larger operational problems.
+
+- **Actionable outputs**  
+Insights should translate into recommendations that support cost-efficient, and sustainability-aware infrastructure decisions over time.
+
+- **Cloud-native extensibility**:  
+The platform should be designed to evolve toward containerized, observable, and automated deployment patterns.
 
 ### Decisions
 
-- **Strict Pydantic validation on all response models**  
+- **Strict Pydantic validation on all response models (Contract-first approach)**  
  All models enforce `extra='forbid'` to reject unexpected fields. `Field()` validators are used to enforce rules including non-negative values (`ge=0`), percentage ranges (`le=100`), minimum lengths, and semantic version patterns. 
 
 - **Separation of concerns between API and database models**  
@@ -149,13 +160,17 @@ finopsguard/
 │   ├── models.py         # Pydantic v2 response models
 │   ├── database.py       # SQLite connection and session management
 │   └── db_models.py      # SQLAlchemy ORM models (Cost, Carbon)
-├── terraform/            # IaC — VPC, EKS, RDS, S3, IAM
-├── k8s/                  # Helm charts + ArgoCD manifests
-├── lambda/               # AWS Lambda functions for cost/carbon processing
-├── tests/                # Pytest unit + Playwright E2E
+├── terraform/            # IaC — VPC, S3, IAM (EKS/RDS planned)
+│   ├── main.tf           
+│   ├── outputs.tf         
+│   ├── providers.tf       
+│   └── variables.tf 
+├── k8s/                  # (planned) Helm charts + ArgoCD manifests
+├── lambda/               # (planned) AWS Lambda functions for cost/carbon processing
+├── tests/                # (planned) Pytest unit + Playwright E2E
 ├── .github/
-│   └── workflows/        # GitHub Actions CI/CD pipeline
-├── docs/                 # Architecture diagrams + cost reports
+│   └── workflows/        # (planned) GitHub Actions CI/CD pipeline
+├── docs/                 # (planned) Architecture diagrams + cost reports
 ├── requirements.txt
 └── README.md
 ```
