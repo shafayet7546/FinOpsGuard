@@ -37,7 +37,7 @@ class CloudMetricsResponse(BaseModel):
             }
         },
     )
-
+    id: int | None = Field(default=None, description="Database record ID")
     month: str = Field(
         ..., pattern=r"^\d{4}-\d{2}$", description="Month in YYYY-MM format"
     )
@@ -60,6 +60,7 @@ class CarbonReportResponse(BaseModel):
             }
         },
     )
+    id: int | None = Field(default=None, description="Database record ID")
     # strict field validations  
     carbon_score: Literal["low", "medium", "high"] = Field(
         ..., description="Carbon impact score based on emissions"
