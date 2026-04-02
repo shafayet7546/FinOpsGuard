@@ -23,31 +23,32 @@ app = FastAPI(
 )
 
 
-# health check endpoint - returns default service status, version, and metadata
+# health check endpoint
 @app.get("/health", response_model=HealthResponse, tags=["monitoring"])
 async def health_check():
+    """returns default service status, version, and metadata"""
     return HealthResponse()
 
 
 # costs endpoint
 @app.get("/costs", response_model=CloudMetricsResponse, tags=["finops"])
 async def get_monthly_costs(db: Session = Depends(get_db)):
+    """return monthly aws spend, carbon emissions, and budget utilization percentage"""
     cost = db.query(Cost).first()
     if not cost:
         return CloudMetricsResponse()
-    """return monthly aws spend, carbon emissions, and budget utilization percentage"""
     return CloudMetricsResponse(month=cost.month, aws_spend=cost.aws_spend, carbon_kg= cost.carbon_kg, budget_used_pct=cost.budget_used_pct)
 
 
 # carbon endpoint
 @app.get("/carbon", response_model=CarbonReportResponse, tags=["finops"])
 async def get_carbon_report(db: Session = Depends(get_db)):
+    """return carbon assessment, kg CO2, and optimization recommendation"""
     carbon = db.query(Carbon).first()
     if not carbon:
         return CarbonReportResponse()
-    CarbonReportResponse(carbon_score=carbon.carbon_score, kg_co2=carbon.kg_co2, recommendation=carbon.recommendation)
-    """return carbon assessment, kg CO2, and optimization recommendation"""
     # expect to automate recommendations in accordance to carbon score
+    CarbonReportResponse(carbon_score=carbon.carbon_score, kg_co2=carbon.kg_co2, recommendation=carbon.recommendation)
 
 
 # report generation endpoint 
