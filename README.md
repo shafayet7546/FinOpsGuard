@@ -38,14 +38,15 @@ Cloud cost monitoring, budget governance, and sustainability insights are often 
 
 - **Schema Validation**: Enforced Strict data contracts enforced using Pydantic models for rejecting unexpected fields and maintaining consistent API behavior(`extra="forbid"`).
 
-- **Persistence Layer**: SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return data through Pydantic models.
+- **Persistence Layer (SQLite)**: SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return strcutured, validated responses using Pydantic models.
 
 - **Infrastructure as Code (Terraform)**: Provisioned AWS infrastructure using Terraform, including a VPC for network isolation, an S3 bucket for report storage, and an IAM role for secure service access. Structured the configuration into dedicated files for provisioning, variables, outputs, and core resource definitions (main.tf) to improve maintainability and separation of concerns.
+
+- **Containerization (Docker)**: Containerized the application using Docker to ensure consistent runtime environments across both development and deployment. The Dockerfile defines all the environment configurations, dependencies, and application startup through Uvicorn.
 
 ## Roadmap
 - AWS cost ingestion and carbon estimation logic
 - PDF report generation and S3 storage
-- Infrastructure provisioning with Terraform
 - Docker + Kubernetes (EKS) deployment
 - GitHub Actions CI/CD pipeline
 - Observability (Prometheus + Grafana)
@@ -61,14 +62,13 @@ Cloud cost monitoring, budget governance, and sustainability insights are often 
 | Backend | FastAPI (Python) |
 | Validation | Pydantic v2 |
 | Persistence | SQLite + SQLAlchemy ORM |
-
+| Infrastructure  | Terraform |
+| Containerization  | Docker |
 
 ### Target Platform
 
 | Layer | Technology |
 |------|------------|
-| Infrastructure  | Terraform |
-| Containerization  | Docker |
 | Orchestration  | Kubernetes (EKS) |
 | CI/CD  | GitHub Actions |
 | Observability  | Prometheus, Grafana |
@@ -104,16 +104,22 @@ Pydantic models define the public API contract, while SQLAlchemy ORM models hand
 - **SQLite with SQLAlchemy ORM for persistence**  
 SQLite was selected for the current phase to support local-first development, rapid iteration, and low operational overhead. Planned integration of AWS storage solutions.
 
+- **Infrastructure as Code using Terraform**  
+AWS resources were provisioned entirely using Terraform to ensure consistent, repeatable infrastructure deployment. The configuration is organized into separate files
+
+- **Containerization using Docker**  
+The application is containerized to ensure consistent runtime behavior across varying development and deployment environments. Docker encapsulates dependencies, isolates the application environment, and simplifies execution. This also enables easier future integration with CI/CD pipelines and orchestration platforms.
+
 - **Pinned dependencies in requirements.txt**  
 Exact dependency pinning ensures reproducibility across local development, CI/CD pipelines, and future container deployments.
-
-
 
 ## Prerequisites
 
 - Python 3.10+
 - pip
 - Git
+- Terraform
+- Docker
 
 ## Environment
 
@@ -140,6 +146,45 @@ uvicorn app.main:app --reload
 #### Access Swagger UI (default port): http://localhost:8000/docs
 #### Alternative Format: http://localhost:(port)/docs
 
+### Quick Start with Docker
+
+#### 1. Install Docker
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+# Logout and login again to apply group changes
+```
+
+**Windows:**
+Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). Ensure WSL 2 is enabled if using Windows Subsystem for Linux.
+
+**macOS:**
+Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
+
+#### 2. Verify Installation
+```bash
+docker --version
+```
+
+#### 3. Clone and Build
+```bash
+git clone https://github.com/shafayet7546/finopsguard.git
+cd finopsguard
+docker build -t finopsguard .
+```
+
+#### 4. Run the Application
+```bash
+docker run -p 8000:8000 finopsguard
+```
+
+#### Swagger UI: http://localhost:8000/docs
+
 ---
 
 ### API Endpoints
@@ -161,7 +206,8 @@ finopsguard/
 │   ├── database.py       # SQLite connection and session management
 │   └── db_models.py      # SQLAlchemy ORM models (Cost, Carbon)
 ├── terraform/            # IaC — VPC, S3, IAM (EKS/RDS planned)
-│   ├── main.tf           
+│   ├── .terraform.lock.hcl
+|   ├── main.tf        
 │   ├── outputs.tf         
 │   ├── providers.tf       
 │   └── variables.tf 
@@ -171,6 +217,9 @@ finopsguard/
 ├── .github/
 │   └── workflows/        # (planned) GitHub Actions CI/CD pipeline
 ├── docs/                 # (planned) Architecture diagrams + cost reports
+├── .gitignore            # Prevents commit of local, sensitive, and build artifacts
+├── .dockerignore         # Excludes unnecessary files from Docker build 
+├── Dockerfile            # Defines application's container image for consistent runtime envs
 ├── requirements.txt
 └── README.md
 ```
