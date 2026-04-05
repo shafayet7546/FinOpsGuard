@@ -1,9 +1,13 @@
 from fastapi import FastAPI, HTTPException
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 from app.db_models import Cost, Carbon
 from app.models import HealthResponse, CloudMetricsResponse, CarbonReportResponse, ReportResponse
 from app.database import Base, SessionLocal, engine
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIASGIMiddleware
+from slowapi.util import get_remote_address
+from slowapi import Limiter, _rate_limit_exceeded_handler
 
 Base.metadata.create_all(bind=engine) 
 
@@ -22,9 +26,19 @@ app = FastAPI(
     docs_url="/docs",
 )
 
+# Use SlowAPI to prevent excessive requests and protect endpoints from abuse
+limiter = Limiter(
+    key_func = get_remote_address,
+    default_limits = ["30/minute"],
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIASGIMiddleware)
 
 # health check endpoint
 @app.get("/health", response_model=HealthResponse, tags=["monitoring health"])
+@limiter.limit("20/minute")
 async def health_check():
     """returns default service status, version, and metadata"""
     return HealthResponse()
@@ -32,6 +46,7 @@ async def health_check():
 # -------------------------------------------------------------------------------------------------------------------------------------
 # GET costs endpoint - allows for retrieval of applicable cloud metric values from database
 @app.get("/costs", response_model=CloudMetricsResponse, tags=["finops"])
+@limiter.limit("15/minute")
 async def get_monthly_costs(db: Session = Depends(get_db)):
     """* Return latest cloud metrics: monthly aws spend, carbon emissions, and budget utilization percentage
 
@@ -47,6 +62,7 @@ async def get_monthly_costs(db: Session = Depends(get_db)):
 # POST costs endpoint - allows for input of 'accepted' values into database
 # testing purposes: will be automated
 @app.post("/costs", response_model=CloudMetricsResponse, tags=["finops"])
+@limiter.limit("15/minute")
 async def create_cost_record(cost_data: CloudMetricsResponse, db: Session = Depends(get_db)):
     """Create a new cost record"""
     db_cost = Cost(
@@ -83,6 +99,7 @@ async def delete_cost_record(cost_id: int, db: Session = Depends(get_db)):
 # carbon endpoint
 # currently retrieves manually ingested data in db
 @app.get("/carbon", response_model=CarbonReportResponse, tags=["finops"])
+@limiter.limit("15/minute")
 async def get_carbon_report(db: Session = Depends(get_db)):
     """return carbon assessment, kg CO2, and optimization recommendation"""
     carbon = db.query(Carbon).order_by(Carbon.id.desc()).first()
@@ -96,6 +113,7 @@ async def get_carbon_report(db: Session = Depends(get_db)):
 
 # manual ingestion endpoint (automation planned)
 @app.post("/carbon", response_model=CarbonReportResponse, tags=["finops"])
+@limiter.limit("15/minute")
 async def create_carbon_record(carbon_data: CarbonReportResponse, db: Session = Depends(get_db)):
     """Create a new carbon record"""
     db_carbon = Carbon(
@@ -116,6 +134,7 @@ async def create_carbon_record(carbon_data: CarbonReportResponse, db: Session = 
 
 # report generation endpoint 
 @app.get("/report", response_model=ReportResponse, tags=["finops"])
+@limiter.limit("10/minute")
 async def generate_report():
     """testing: return mock status message, generated report url (stored in S3) and generated timestamp"""
     return ReportResponse(
