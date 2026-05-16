@@ -1,0 +1,2405 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FinOpsGuard Agent — AI-powered cloud cost intelligence with forecasting and optimization recommendations.">
+    <title>FinOpsGuard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%230ea5e9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23071321'/%3E%3Cpath d='M18 18h28v8H26v10h16v8H26v12h-8z' fill='url(%23g)'/%3E%3Ccircle cx='47' cy='47' r='5' fill='%233b82f6'/%3E%3C/svg%3E">
+    <link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%230ea5e9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23071321'/%3E%3Cpath d='M18 18h28v8H26v10h16v8H26v12h-8z' fill='url(%23g)'/%3E%3Ccircle cx='47' cy='47' r='5' fill='%233b82f6'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+    <style>
+        /* ── Reset & Variables ─────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #040910;
+            --bg-card: rgba(6, 12, 22, 0.84);
+            --bg-input: #0a1422;
+            --border: #1f3148;
+            --border-focus: #60a5fa;
+            --text: #e6edf7;
+            --text-muted: #a9bad0;
+            --text-dim: #70849d;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --green: #10b981;
+            --green-dim: rgba(16, 185, 129, 0.15);
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --report-surface-top: rgba(14, 24, 38, 0.9);
+            --report-surface-bottom: rgba(8, 15, 26, 0.92);
+            --report-border: rgba(93, 130, 170, 0.38);
+            --report-border-soft: rgba(58, 84, 112, 0.52);
+            --home-surface-top: rgba(13, 22, 36, 0.86);
+            --home-surface-bottom: rgba(7, 14, 24, 0.88);
+            --home-border-soft: rgba(92, 128, 166, 0.32);
+            --font: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            --mono: 'IBM Plex Mono', 'Fira Code', monospace;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --shadow-soft: 0 10px 24px rgba(4, 10, 18, 0.34);
+            --shadow-mid: 0 18px 40px rgba(2, 6, 12, 0.48);
+        }
+
+        body {
+            font-family: var(--font);
+            background:
+                radial-gradient(860px circle at -4% -18%, rgba(59, 130, 246, 0.18), transparent 46%),
+                radial-gradient(920px circle at 104% -16%, rgba(14, 165, 233, 0.14), transparent 40%),
+                linear-gradient(180deg, #070f1d 0%, #040910 46%, #02050c 100%);
+            color: var(--text);
+            line-height: 1.65;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(to right, rgba(118, 146, 176, 0.07) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(118, 146, 176, 0.07) 1px, transparent 1px);
+            background-size: 56px 56px;
+            opacity: 0.52;
+            z-index: -1;
+        }
+
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { color: var(--primary-hover); }
+
+        :focus-visible {
+            outline: 2px solid #93c5fd;
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: 16px;
+            top: -48px;
+            z-index: 1000;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #dbeafe;
+            background: rgba(9, 18, 30, 0.95);
+            border: 1px solid rgba(147, 197, 253, 0.55);
+            transition: top 0.2s var(--ease-out);
+        }
+        .skip-link:focus {
+            top: 10px;
+        }
+
+        /* ── Views ──────────────────────────────────────────── */
+        .view { display: none; min-height: 100vh; }
+        .view.active { display: block; }
+        .view.view-seen .hero > * {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+        .view.view-seen .tech-category {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+        .view.view-seen .experience-shell,
+        .view.view-seen .cost-row {
+            animation: none !important;
+        }
+
+        /* ── Navbar ─────────────────────────────────────────── */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(7, 14, 24, 0.92);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 16px 36px rgba(2, 6, 12, 0.4);
+        }
+        .nav-brand {
+            font-weight: 700;
+            font-size: 1.02rem;
+            letter-spacing: 0.02em;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .nav-brand:visited { color: var(--text); }
+        .nav-brand:hover { color: #dbeafe; }
+        .nav-brand span { color: #60a5fa; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a {
+            color: var(--text-dim);
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            border-radius: 8px;
+            padding: 5px 8px;
+            transition: color 0.2s var(--ease-out), transform 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
+        }
+        .nav-links a:hover { color: var(--text); transform: translateY(-1px); opacity: 1; }
+        .nav-links a:focus-visible {
+            color: #e8f1fb;
+            background: rgba(59, 130, 246, 0.16);
+            outline: 2px solid rgba(147, 197, 253, 0.82);
+            outline-offset: 1px;
+        }
+
+        /* ── Hero ───────────────────────────────────────────── */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 108px 24px 70px;
+            min-height: calc(100vh - 57px);
+            position: relative;
+            isolation: isolate;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 28px 12px 24px;
+            border-radius: 26px;
+            border: 1px solid var(--home-border-soft);
+            background:
+                radial-gradient(120% 140% at 14% -24%, rgba(96, 165, 250, 0.2), transparent 48%),
+                linear-gradient(180deg, var(--home-surface-top), var(--home-surface-bottom));
+            box-shadow: 0 22px 46px rgba(2, 6, 12, 0.48), inset 0 1px 0 rgba(169, 194, 221, 0.08);
+            z-index: -1;
+        }
+        .hero > * {
+            opacity: 0;
+            position: relative;
+            z-index: 1;
+            animation: heroRise 0.78s var(--ease-out) forwards;
+        }
+        .hero-badge { animation-delay: 0.05s; }
+        .hero h1 { animation-delay: 0.12s; }
+        .hero-sub { animation-delay: 0.2s; }
+        .hero-feature-list { animation-delay: 0.28s; }
+        .hero-actions { animation-delay: 0.36s; }
+        .hero > p:not(.hero-sub) { animation-delay: 0.44s; }
+        .hero-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #bfdbfe;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(147, 197, 253, 0.42);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            letter-spacing: 0.06em;
+        }
+        .hero h1 {
+            font-size: clamp(2.6rem, 6vw, 4.35rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            line-height: 1.04;
+            margin-bottom: 18px;
+            text-shadow: 0 10px 26px rgba(8, 14, 24, 0.55);
+        }
+        .hero h1 .accent {
+            background: linear-gradient(120deg, #93c5fd, #3b82f6 52%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            color: #c3d5e8;
+            font-size: 1.08rem;
+            max-width: 70ch;
+            margin-bottom: 18px;
+            line-height: 1.76;
+            letter-spacing: 0.005em;
+        }
+        .hero-feature-list {
+            list-style: none;
+            width: min(92vw, 860px);
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: 0 auto 34px;
+            padding: 0;
+        }
+        .hero-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            text-align: left;
+            border-radius: 12px;
+            border: 1px solid rgba(108, 143, 182, 0.42);
+            background: linear-gradient(160deg, rgba(13, 24, 38, 0.9), rgba(8, 16, 27, 0.84));
+            color: #d2e2f3;
+            font-size: 0.9rem;
+            line-height: 1.56;
+            box-shadow: 0 10px 22px rgba(3, 8, 16, 0.35);
+            transition: transform 0.22s var(--ease-out), border-color 0.22s var(--ease-out), background 0.22s var(--ease-out);
+        }
+        .hero-feature:hover {
+            transform: translateY(-2px);
+            border-color: rgba(147, 197, 253, 0.62);
+            background: linear-gradient(160deg, rgba(16, 29, 44, 0.96), rgba(9, 18, 30, 0.9));
+        }
+        .hero-feature strong {
+            color: #ecf5ff;
+            font-weight: 700;
+        }
+        .hero-feature-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+            font-size: 0.62rem;
+            color: #dbeafe;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.34), rgba(14, 165, 233, 0.2));
+            border: 1px solid rgba(147, 197, 253, 0.5);
+        }
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 42px;
+        }
+        /* ── Tech Stack Grid ─────────────────────────────── */
+        .tech-stack {
+            width: 100%;
+            max-width: 980px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .tech-category {
+            background: linear-gradient(160deg, rgba(12, 22, 36, 0.9), rgba(8, 16, 27, 0.84));
+            border: 1px solid rgba(79, 110, 142, 0.5);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            text-align: left;
+            transition: border-color 0.24s var(--ease-out), transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+            box-shadow: 0 12px 24px rgba(3, 8, 16, 0.42);
+            opacity: 0;
+            animation: cardRise 0.62s var(--ease-out) forwards;
+        }
+        .tech-category:nth-child(1) { animation-delay: 0.44s; }
+        .tech-category:nth-child(2) { animation-delay: 0.5s; }
+        .tech-category:nth-child(3) { animation-delay: 0.56s; }
+        .tech-category:nth-child(4) { animation-delay: 0.62s; }
+        .tech-category:hover {
+            border-color: rgba(96, 165, 250, 0.52);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-mid);
+        }
+        .tech-category-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tech-category-label .cat-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .cat-backend .tech-category-label { color: #22d3ee; }
+        .cat-backend .cat-dot { background: #22d3ee; }
+        .cat-ai .tech-category-label { color: #60a5fa; }
+        .cat-ai .cat-dot { background: #60a5fa; }
+        .cat-quality .tech-category-label { color: #10b981; }
+        .cat-quality .cat-dot { background: #10b981; }
+        .cat-infra .tech-category-label { color: #c084fc; }
+        .cat-infra .cat-dot { background: #c084fc; }
+        .tech-summary {
+            font-size: 0.8rem;
+            line-height: 1.55;
+            color: #8ea6c0;
+            margin-bottom: 12px;
+            min-height: 38px;
+        }
+        .tech-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tech-badge {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+            color: #d9e5f3;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #2d4b66;
+            background: rgba(8, 17, 28, 0.82);
+            transition: transform 0.2s var(--ease-out), border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+        }
+        .tech-badge:hover {
+            transform: translateY(-1px);
+            border-color: #6ea8e6;
+            background: rgba(13, 25, 40, 0.95);
+        }
+        .cat-backend .tech-badge { border-color: rgba(34, 211, 238, 0.48); }
+        .cat-ai .tech-badge { border-color: rgba(96, 165, 250, 0.5); }
+        .cat-quality .tech-badge { border-color: rgba(16, 185, 129, 0.45); }
+        .cat-infra .tech-badge { border-color: rgba(192, 132, 252, 0.45); }
+
+        /* ── Buttons ────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: var(--radius);
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            min-height: 44px;
+            transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), background 0.22s var(--ease-out), border-color 0.22s var(--ease-out), color 0.22s var(--ease-out);
+        }
+        .btn:focus-visible {
+            outline: 2px solid rgba(147, 197, 253, 0.9);
+            outline-offset: 2px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #04172e;
+            box-shadow: 0 10px 28px rgba(59, 130, 246, 0.32);
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px rgba(59, 130, 246, 0.34);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            background: rgba(8, 17, 28, 0.82);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: #2f4e68; background: rgba(11, 24, 38, 0.95); }
+        .btn-docs {
+            background: rgba(59, 130, 246, 0.14);
+            color: #bfdbfe;
+            border: 1px solid rgba(96, 165, 250, 0.42);
+            padding: 12px 24px;
+        }
+        .btn-docs:hover {
+            background: rgba(59, 130, 246, 0.24);
+            border-color: rgba(147, 197, 253, 0.72);
+            color: #dbeafe;
+            transform: translateY(-2px);
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--primary);
+            border: 1px dashed rgba(96, 165, 250, 0.4);
+            padding: 10px 20px;
+            font-size: 0.875rem;
+        }
+        .btn-ghost:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+        .btn-problem {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.38);
+        }
+        .btn-problem:hover {
+            background: rgba(239, 68, 68, 0.22);
+            border-color: rgba(239, 68, 68, 0.72);
+            color: #fecaca;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.18);
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Back Button ────────────────────────────────────── */
+        .back-btn {
+            background: rgba(7, 14, 24, 0.78);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-dim);
+            font-family: var(--font);
+            font-size: 0.875rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-bottom: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), background 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+        }
+        .back-btn:hover {
+            color: var(--text);
+            border-color: #37567a;
+            background: rgba(10, 19, 32, 0.92);
+            transform: translateY(-1px);
+        }
+
+        /* ── Section Container ──────────────────────────────── */
+        .section-container {
+            max-width: 1020px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+        .experience-shell {
+            position: relative;
+            background: linear-gradient(180deg, rgba(8, 14, 24, 0.9), rgba(6, 11, 20, 0.9));
+            border: 1px solid #2b3f5a;
+            border-radius: 18px;
+            box-shadow: 0 26px 52px rgba(2, 6, 12, 0.52), inset 0 1px 0 rgba(153, 177, 204, 0.1);
+            animation: shellIn 0.56s var(--ease-out) both;
+        }
+        .experience-shell::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(147, 197, 253, 0), rgba(96, 165, 250, 0.85), rgba(14, 165, 233, 0));
+        }
+        .section-head {
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(47, 72, 101, 0.45);
+        }
+        .section-head .mode-title { margin-bottom: 4px; }
+
+        /* ── Terminal (Demo) ────────────────────────────────── */
+        .terminal-card {
+            background: linear-gradient(180deg, rgba(8, 16, 28, 0.9), rgba(6, 12, 22, 0.9));
+            border: 1px solid #2b415f;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            max-width: 760px;
+            margin: 0 auto 32px;
+            box-shadow: 0 24px 44px rgba(3, 8, 16, 0.5);
+        }
+        .terminal-header {
+            background: linear-gradient(120deg, rgba(59, 130, 246, 0.26), rgba(12, 20, 34, 0.98));
+            padding: 12px 16px;
+            border-bottom: 1px solid #244059;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .terminal-dots { display: flex; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
+        .terminal-title {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            color: #b4c7dc;
+        }
+        .terminal-body { padding: 10px; }
+
+        .mode-title {
+            font-size: 1.45rem;
+            margin-bottom: 6px;
+            color: var(--text);
+            letter-spacing: -0.015em;
+            line-height: 1.2;
+        }
+        .mode-subtitle {
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+            line-height: 1.72;
+            max-width: 700px;
+        }
+
+        .step {
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: #7d93ab;
+            border: 1px solid #20374d;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: rgba(9, 17, 27, 0.75);
+            transition: color 0.3s, background 0.3s, border-color 0.3s, transform 0.2s;
+        }
+        .step:last-child { margin-bottom: 0; }
+        .step.running {
+            color: #7dd3fc;
+            border-color: rgba(96, 165, 250, 0.6);
+            background: rgba(59, 130, 246, 0.14);
+            transform: translateX(2px);
+        }
+        .step.running .step-icon { animation: pulse 1s infinite; }
+        .step.done {
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.45);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .step.error { color: var(--red); }
+        .step-detail {
+            margin-left: auto;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        @keyframes heroRise {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cardRise {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes shellIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.995); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .demo-report-btn {
+            display: none;
+            margin: 0 auto;
+        }
+
+        /* ── Try It Form ────────────────────────────────────── */
+        .form-section h2 {
+            font-size: 1.62rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .form-hint {
+            color: var(--text-dim);
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+        }
+        .example-bar {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: var(--radius);
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .example-bar .example-label {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .example-bar code {
+            font-family: var(--mono);
+            background: rgba(8, 17, 28, 0.7);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #e2e8f0;
+        }
+
+        .form-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 170px;
+            gap: 12px;
+            padding: 0 0 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .cost-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 170px;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            border: 1px solid rgba(44, 65, 92, 0.78);
+            border-radius: 12px;
+            background: rgba(6, 12, 22, 0.72);
+            animation: fadeIn 0.2s ease;
+            transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+        }
+        .cost-row:hover {
+            border-color: rgba(96, 165, 250, 0.45);
+            background: rgba(7, 14, 25, 0.84);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-wrap { position: relative; }
+        .input-wrap input, .input-wrap select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.875rem;
+            transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), background 0.2s var(--ease-out);
+        }
+        .input-wrap input:focus, .input-wrap select:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.22);
+        }
+        .input-wrap input.input-error {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        .input-wrap select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2371717a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .field-error {
+            display: block;
+            color: var(--red);
+            font-size: 0.7rem;
+            margin-top: 3px;
+            min-height: 16px;
+        }
+
+        .row-actions {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 2px;
+        }
+        .btn-mini {
+            background: rgba(14, 27, 40, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-family: var(--font);
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-sample {
+            background: rgba(59, 130, 246, 0.24);
+            border-color: rgba(96, 165, 250, 0.7);
+            color: #dbeafe;
+            font-weight: 700;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18);
+        }
+        .btn-sample:hover {
+            background: rgba(59, 130, 246, 0.34);
+            border-color: #93c5fd;
+            color: #eff6ff;
+        }
+        .btn-clear {
+            background: rgba(14, 27, 40, 0.9);
+            border-color: #355173;
+            color: #b9cee3;
+        }
+        .btn-clear:hover {
+            border-color: #7aa7d8;
+            color: #e3effb;
+            background: rgba(18, 34, 52, 0.95);
+        }
+        .btn-mini:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-mini.btn-sample:hover { border-color: #93c5fd; color: #eff6ff; }
+        .btn-remove:hover { border-color: var(--red); color: var(--red); }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+            justify-content: flex-end;
+            padding-top: 8px;
+            border-top: 1px solid rgba(30, 47, 68, 0.7);
+        }
+
+        .feedback {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .feedback.loading {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(96, 165, 250, 0.35);
+            color: var(--primary);
+        }
+        .feedback.error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--red);
+        }
+
+        /* ── Report ─────────────────────────────────────────── */
+        .report-section h2 {
+            font-size: 1.72rem;
+            font-weight: 750;
+            letter-spacing: -0.015em;
+            margin-bottom: 8px;
+        }
+        .report-section {
+            background:
+                radial-gradient(120% 140% at 10% -20%, rgba(96, 165, 250, 0.18), transparent 44%),
+                linear-gradient(180deg, var(--report-surface-top), var(--report-surface-bottom));
+            border: 1px solid var(--report-border);
+            border-radius: 18px;
+            box-shadow: 0 24px 44px rgba(2, 6, 12, 0.48), inset 0 1px 0 rgba(178, 202, 228, 0.09);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+        .report-subtitle {
+            font-size: 0.94rem;
+            color: #b7cae0;
+            margin-bottom: 22px;
+            max-width: 66ch;
+            line-height: 1.7;
+        }
+        #report-summary {
+            margin-bottom: 6px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .kpi-card {
+            border: 1px solid var(--report-border-soft);
+            border-radius: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(160deg, rgba(13, 25, 40, 0.92), rgba(7, 15, 25, 0.88));
+            transition: border-color 0.24s var(--ease-out), transform 0.24s var(--ease-out);
+        }
+        .kpi-card:hover {
+            border-color: rgba(130, 170, 214, 0.55);
+            transform: translateY(-1px);
+        }
+        .kpi-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #90a5bd;
+            margin-bottom: 4px;
+        }
+        .kpi-value {
+            font-size: 1.18rem;
+            font-weight: 700;
+            color: #eef4fb;
+            line-height: 1.35;
+        }
+        .summary-table-wrap {
+            border: 1px solid var(--report-border-soft);
+            border-radius: 14px;
+            overflow-x: auto;
+            margin-bottom: 32px;
+            background: linear-gradient(180deg, rgba(10, 20, 33, 0.86), rgba(8, 15, 26, 0.82));
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 560px;
+        }
+        .summary-table th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #a3b8cf;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #2a4462;
+            background: rgba(10, 20, 33, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .summary-table th[scope="row"] {
+            color: #d5e4f5;
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .summary-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(44, 67, 94, 0.72);
+            color: #d0def0;
+        }
+        .summary-table tr:nth-child(even) td,
+        .summary-table tr:nth-child(even) th[scope="row"] {
+            background: rgba(7, 14, 24, 0.42);
+        }
+        .summary-table tr:hover td,
+        .summary-table tr:hover th[scope="row"] {
+            background: rgba(59, 130, 246, 0.14);
+            color: #ecf3fd;
+        }
+        .summary-table tr:last-child td { border-bottom: none; }
+        .pct-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        .pct-badge.ok { background: var(--green-dim); color: var(--green); }
+        .pct-badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+        .pct-badge.critical { background: rgba(239, 68, 68, 0.12); color: var(--red); }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .chart-card-wide {
+            grid-column: 1 / -1;
+        }
+        .chart-card {
+            background: linear-gradient(165deg, rgba(12, 22, 36, 0.93), rgba(8, 15, 26, 0.9));
+            border: 1px solid var(--report-border-soft);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            box-shadow: 0 14px 28px rgba(3, 8, 16, 0.48);
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            background: linear-gradient(90deg, rgba(147, 197, 253, 0.9), rgba(59, 130, 246, 0.8), rgba(14, 165, 233, 0.85));
+            opacity: 0.82;
+        }
+        .chart-card h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #bacde2;
+            letter-spacing: 0.01em;
+            margin-bottom: 16px;
+        }
+        .chart-card canvas { max-height: 330px; }
+
+        .analysis-card {
+            background: linear-gradient(165deg, rgba(11, 21, 35, 0.94), rgba(8, 16, 28, 0.91));
+            border: 1px solid var(--report-border-soft);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: 0 16px 32px rgba(3, 8, 16, 0.5);
+        }
+        .analysis-card h3 {
+            font-size: 1.04rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+        #analysis-content {
+            color: #c6d8eb;
+            font-size: 0.92rem;
+            line-height: 1.82;
+        }
+        #analysis-content h2 {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 22px 0 10px;
+        }
+        #analysis-content h2:first-child { margin-top: 0; }
+        #analysis-content p { margin: 10px 0; }
+        #analysis-content ul { padding-left: 20px; margin: 8px 0; }
+        #analysis-content li { margin-bottom: 6px; }
+        #analysis-content strong { color: var(--text); }
+        #analysis-content em { color: var(--text-dim); font-style: italic; }
+        #analysis-content a {
+            color: #93c5fd;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+        }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .form-header { display: none; }
+            .cost-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .charts-grid { grid-template-columns: 1fr; }
+            .tech-stack { grid-template-columns: 1fr; gap: 10px; }
+            .hero {
+                padding: 56px 16px 34px;
+                min-height: calc(100vh - 57px);
+            }
+            .hero::before {
+                inset: 16px 4px 12px;
+                border-radius: 18px;
+            }
+            .hero-sub { font-size: 0.98rem; line-height: 1.68; }
+            .hero-feature-list {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 26px;
+            }
+            .hero-feature {
+                font-size: 0.84rem;
+                padding: 10px 12px;
+            }
+            .navbar { padding: 12px 16px; }
+            .nav-links { gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+            .section-container { padding: 24px 16px 40px; }
+            .experience-shell { border-radius: 14px; }
+            .kpi-grid { grid-template-columns: 1fr; }
+            .report-section h2 { font-size: 1.44rem; }
+            .report-subtitle { font-size: 0.88rem; margin-bottom: 16px; }
+            .chart-card { padding: 18px; }
+            .chart-card canvas { max-height: 300px; }
+            .summary-table-wrap { border-radius: 12px; }
+            .summary-table { min-width: 520px; font-size: 0.84rem; }
+            .pct-badge { font-size: 0.74rem; padding: 3px 8px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @media (prefers-contrast: more) {
+            .hero::before,
+            .tech-category,
+            .chat-window,
+            .scenario-outro,
+            .scenario-outro-text,
+            .scenario-section::before,
+            .report-section,
+            .kpi-card,
+            .chart-card,
+            .analysis-card,
+            .summary-table-wrap {
+                border-color: #8ab0d7;
+            }
+            .hero-sub,
+            .tech-summary,
+            .scenario-desc,
+            .chat-text,
+            .summary-table th,
+            .summary-table td,
+            .summary-table th[scope="row"],
+            .kpi-label,
+            .kpi-value,
+            #analysis-content {
+                color: #f1f6fc;
+            }
+            .pct-badge.ok { background: rgba(16, 185, 129, 0.28); }
+            .pct-badge.warning { background: rgba(245, 158, 11, 0.26); }
+            .pct-badge.critical { background: rgba(239, 68, 68, 0.26); }
+        }
+
+        /* ── Pain Point Scenario Section ─────────────────────────── */
+        .scenario-section {
+            padding: 72px 24px 96px;
+            text-align: center;
+            position: relative;
+            isolation: isolate;
+        }
+        .scenario-section::before {
+            content: '';
+            position: absolute;
+            inset: 20px 16px 26px;
+            border-radius: 24px;
+            border: 1px solid rgba(86, 122, 160, 0.3);
+            background: linear-gradient(180deg, rgba(10, 20, 34, 0.66), rgba(7, 14, 24, 0.74));
+            z-index: -1;
+        }
+        .scenario-inner {
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .scenario-title {
+            font-size: clamp(1.65rem, 3.5vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+            margin-bottom: 14px;
+        }
+        .scenario-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 580px;
+            margin: 0 auto 52px;
+            line-height: 1.7;
+        }
+        /* Chat Window */
+        .chat-window {
+            max-width: 680px;
+            margin: 0 auto 52px;
+            background: #0a1626;
+            border: 1px solid #1e3450;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 28px 56px rgba(2, 5, 12, 0.65);
+            text-align: left;
+        }
+        .chat-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 16px;
+            background: #081222;
+            border-bottom: 1px solid #1a2e46;
+        }
+        .chat-dots { display: flex; gap: 5px; }
+        .chat-dots span { width: 10px; height: 10px; border-radius: 50%; }
+        .chat-dots span:nth-child(1) { background: #ff5f57; }
+        .chat-dots span:nth-child(2) { background: #ffbd2e; }
+        .chat-dots span:nth-child(3) { background: #28c840; }
+        .chat-channel {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: #6a8caa;
+            flex: 1;
+        }
+        .chat-status { font-size: 0.68rem; font-weight: 600; color: #28c840; }
+        .chat-body {
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .chat-msg {
+            display: flex;
+            gap: 11px;
+            align-items: flex-start;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .scenario-section.scenario-live .chat-msg {
+            animation: chatReveal 0.38s ease forwards;
+        }
+        .scenario-section.scenario-live .chat-msg:nth-child(1) { animation-delay: 0.1s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(2) { animation-delay: 0.6s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(3) { animation-delay: 1.1s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(4) { animation-delay: 1.6s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(5) { animation-delay: 2.1s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(6) { animation-delay: 2.6s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(7) { animation-delay: 3.1s; }
+        .scenario-section.scenario-live .chat-msg:nth-child(8) { animation-delay: 3.5s; }
+        @keyframes chatReveal {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .chat-avatar {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.74rem; font-weight: 700; color: #fff;
+            flex-shrink: 0;
+        }
+        .av-blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .av-amber  { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .av-violet { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
+        .chat-content { flex: 1; min-width: 0; }
+        .chat-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+        .chat-name { font-size: 0.82rem; font-weight: 700; }
+        .chat-time { font-size: 0.66rem; color: var(--text-dim); }
+        .chat-text {
+            font-size: 0.85rem;
+            color: #bfd1e6;
+            line-height: 1.58;
+            background: rgba(6, 14, 24, 0.65);
+            border: 1px solid #1c3050;
+            border-radius: 4px 12px 12px 12px;
+            padding: 9px 13px;
+        }
+        .chat-text code {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            background: rgba(59, 130, 246, 0.15);
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: #93c5fd;
+        }
+        .chat-text strong { color: #e2f0ff; }
+        .chat-msg.msg-frustrated .chat-text {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.04);
+            color: #f0c7c7;
+        }
+        .chat-msg.msg-end .chat-text {
+            border-color: rgba(99, 102, 241, 0.32);
+            background: rgba(99, 102, 241, 0.04);
+            color: #c5c7f0;
+            font-style: italic;
+        }
+        /* Scenario Outro */
+        .scenario-outro {
+            position: relative;
+            max-width: 920px;
+            margin: 8px auto 0;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(14px);
+            pointer-events: none;
+        }
+        .scenario-section.scenario-complete .scenario-outro {
+            animation: scenarioReveal 0.46s var(--ease-out) forwards;
+        }
+        .scenario-section.scenario-complete.scenario-typing-done .scenario-outro {
+            pointer-events: auto;
+        }
+        @keyframes scenarioReveal {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .scenario-outro-text {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: min(92vw, 860px);
+            min-height: 70px;
+            padding: 16px 26px;
+            border-radius: 16px;
+            border: 1px solid rgba(90, 130, 172, 0.58);
+            background: linear-gradient(160deg, rgba(10, 20, 36, 0.96), rgba(6, 13, 24, 0.94));
+            color: #e6effa;
+            font-weight: 750;
+            font-size: clamp(1.35rem, 2.7vw, 2.12rem);
+            letter-spacing: -0.015em;
+            line-height: 1.22;
+            text-align: center;
+            box-shadow: 0 14px 32px rgba(2, 6, 14, 0.55);
+            overflow: hidden;
+            white-space: normal;
+        }
+        .scenario-outro-text::after {
+            content: '';
+            width: 2px;
+            height: 1.05em;
+            margin-left: 6px;
+            background: rgba(147, 197, 253, 0.75);
+            opacity: 1;
+            animation: scenarioCaretBlink 0.88s steps(1, end) infinite;
+        }
+        .scenario-section.scenario-complete.scenario-typing-done .scenario-outro-text::after {
+            opacity: 0;
+            animation: none;
+        }
+        .scenario-outro-text .outro-accent {
+            color: #78b8ff;
+            text-shadow: 0 0 18px rgba(96, 165, 250, 0.25);
+        }
+        .scenario-outro-text .outro-accent-strong {
+            background: linear-gradient(120deg, #9dd2ff, #3b82f6 52%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .scenario-outro-up {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(147, 197, 253, 0.62);
+            background: linear-gradient(160deg, rgba(16, 30, 46, 0.96), rgba(8, 16, 28, 0.9));
+            color: #cfe3fb;
+            font-size: 1.2rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(2, 6, 12, 0.45);
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: transform 0.24s var(--ease-out), opacity 0.24s var(--ease-out), border-color 0.24s var(--ease-out), color 0.24s var(--ease-out), background 0.24s var(--ease-out);
+        }
+        .scenario-outro-up:hover {
+            border-color: rgba(147, 197, 253, 0.84);
+            color: #e5f2ff;
+            background: linear-gradient(160deg, rgba(22, 40, 60, 0.98), rgba(10, 20, 34, 0.94));
+            transform: translateY(4px);
+        }
+        .scenario-outro-up:focus-visible {
+            outline: 2px solid rgba(147, 197, 253, 0.9);
+            outline-offset: 2px;
+        }
+        .scenario-section.scenario-complete.scenario-typing-done .scenario-outro-up {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        @keyframes scenarioCaretBlink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .scenario-outro {
+                max-width: 94vw;
+                min-height: 94px;
+            }
+            .scenario-outro-text {
+                min-height: 64px;
+                font-size: clamp(1.02rem, 5.2vw, 1.34rem);
+                padding: 13px 16px;
+            }
+            .scenario-outro-up {
+                width: 38px;
+                height: 38px;
+                font-size: 1.05rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#home-main-content">Skip to main content</a>
+
+    <!-- Navbar (shared across all views) -->
+    <nav class="navbar" aria-label="Primary">
+        <a class="nav-brand" href="#home-main-content" aria-label="FinOpsGuard homepage">FinOps<span class="accent">Guard</span></a>
+        <div class="nav-links">
+            <a href="/docs" target="_blank">API Docs</a>
+            <a href="https://github.com/shafayet7546/FinOpsGuard/blob/main/README.md" target="_blank" rel="noopener noreferrer">Documentation</a>
+            <a href="https://github.com/shafayet7546/FinOpsGuard" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- ═══ View: Hero / Landing ═══ -->
+    <div id="view-hero" class="view active" role="main" aria-labelledby="home-title">
+        <section class="hero" id="home-main-content" tabindex="-1" aria-describedby="home-subtitle">
+            <div class="hero-badge">AI-Powered FinOps Intelligence</div>
+            <h1 id="home-title">FinOps<span class="accent">Guard</span></h1>
+            <p class="hero-sub" id="home-subtitle">
+                
+                Turn monthly cloud cost inputs into an executive-ready decision brief.
+            </p>
+            <ul class="hero-feature-list" role="list" aria-label="Core FinOpsGuard features">
+                <li class="hero-feature" role="listitem">
+                    <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
+                    <span><strong>Budget Threshold Visibility:</strong> monthly utilization with anticipated new service expenditure, against budget limits in one glance.</span>
+                </li>
+                <li class="hero-feature" role="listitem">
+                    <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
+                    <span><strong>Forecasting Engine:</strong> Holt's Dampened Trend projection for the next three months.</span>
+                </li>
+                <li class="hero-feature" role="listitem">
+                    <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
+                    <span><strong>AI Recommendations:</strong> prioritized cost optimization guidance with actionable next steps.</span>
+                </li>
+                <li class="hero-feature" role="listitem">
+                    <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
+                    <span><strong>Single Report Output:</strong> engineering and finance aligned through one unified API report.</span>
+                </li>
+            </ul>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="startDemo()" aria-label="Run demo agent workflow">
+                    &#9654; Demo Agent
+                </button>
+                <button class="btn btn-secondary" onclick="showTryIt()" aria-label="Open manual data entry flow">
+                    &#9000; Try It Yourself
+                </button>
+                <button class="btn btn-problem" onclick="scrollToProblem()" aria-label="Jump to problem scenario section">
+                    The Problem
+                </button>
+                <a class="btn btn-docs" href="https://github.com/shafaaz11/finopsguard/blob/main/README.md" target="_blank" rel="noopener noreferrer" aria-label="Open project documentation in a new tab">
+                    &#128196; Documentation
+                </a>
+            </div>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;">Technology stack grouped by delivery layer.</p>
+            <div class="tech-stack" role="list" aria-label="Technology stack">
+                <div class="tech-category cat-backend" role="listitem" aria-labelledby="stack-backend-label">
+                    <div class="tech-category-label" id="stack-backend-label"><span class="cat-dot"></span>Backend &amp; Data</div>
+                    <p class="tech-summary">API contracts, validation, and ORM persistence across PostgreSQL in production with SQLite local fallback.</p>
+                    <div class="tech-badges" aria-label="Backend and data technologies">
+                        <span class="tech-badge">FastAPI</span>
+                        <span class="tech-badge">Pydantic v2</span>
+                        <span class="tech-badge">SQLAlchemy</span>
+                        <span class="tech-badge">SQLite</span>
+                    </div>
+                </div>
+                <div class="tech-category cat-ai" role="listitem" aria-labelledby="stack-ai-label">
+                    <div class="tech-category-label" id="stack-ai-label"><span class="cat-dot"></span>AI &amp; Visualization</div>
+                    <p class="tech-summary">Executive insight generation, Holt's Dampened Trend forecasting, and chart-driven storytelling for spend and risk signals.</p>
+                    <div class="tech-badges" aria-label="AI and visualization technologies">
+                        <span class="tech-badge">OpenAI: gpt-5.4-mini</span>
+                        <span class="tech-badge">Holt's Dampened Trend Algo</span>
+                        <span class="tech-badge">Chart.js</span>
+                        <span class="tech-badge">Marked</span>
+                    </div>
+                </div>
+                <div class="tech-category cat-quality" role="listitem" aria-labelledby="stack-quality-label">
+                    <div class="tech-category-label" id="stack-quality-label"><span class="cat-dot"></span>Testing &amp; Quality</div>
+                    <p class="tech-summary">Automated confidence checks for API behavior, code quality, and container vulnerability posture.</p>
+                    <div class="tech-badges" aria-label="Testing and quality technologies">
+                        <span class="tech-badge">Ruff</span>
+                        <span class="tech-badge">Pytest</span>
+                        <span class="tech-badge">Grype</span>
+                    </div>
+                </div>
+                <div class="tech-category cat-infra" role="listitem" aria-labelledby="stack-infra-label">
+                    <div class="tech-category-label" id="stack-infra-label"><span class="cat-dot"></span>Infrastructure &amp; CI/CD</div>
+                    <p class="tech-summary">Containerized runtime and CI/CD orchestration from automated checks to managed deployment.</p>
+                    <div class="tech-badges" aria-label="Infrastructure and deployment technologies">
+                        <span class="tech-badge">GitHub Actions</span>
+                        <span class="tech-badge">Docker</span>
+                        <span class="tech-badge">Render</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Pain Point Scenario Section ── -->
+        <section class="scenario-section" id="scenario-section" role="region" aria-labelledby="scenario-title">
+            <div class="scenario-inner">
+                <h2 class="scenario-title" id="scenario-title">Days Before a New AWS Service Rollout</h2>
+                <p class="scenario-desc">Month-end pressure, live-data-only tools, and another rollout decision made with incomplete visibility.</p>
+
+                <!-- Chat window -->
+                <div class="chat-window" role="group" aria-labelledby="chat-transcript-title" aria-describedby="chat-transcript-desc">
+                    <div class="chat-titlebar">
+                        <div class="chat-dots"><span></span><span></span><span></span></div>
+                        <span class="chat-channel" id="chat-transcript-title"># Engineering Team</span>
+                        <span class="chat-status">&#11044; 3 online</span>
+                    </div>
+                    <p id="chat-transcript-desc" class="sr-only">Simulated transcript showing typical month-end budget coordination challenges across engineering and financial operations stakeholders.</p>
+                    <div class="chat-body" role="list" aria-label="Simulated chat transcript">
+                        <div class="chat-msg" role="listitem">
+                            <div class="chat-avatar av-blue">JL</div>
+                            <div class="chat-content">
+                                <div class="chat-meta"><span class="chat-name" style="color:#60a5fa">Jordan</span><span class="chat-time">9:02 AM</span></div>
+                                <div class="chat-text">Team, finance review is in 48 hours. Before we approve this new service rollout, I need one view of budget vs threshold, a 3-month forecast, and clear actions.</div>
+                            </div>
+                        </div>
+                        <div class="chat-msg" role="listitem">
+                            <div class="chat-avatar av-amber">AK</div>
+                            <div class="chat-content">
+                                <div class="chat-meta"><span class="chat-name" style="color:#fbbf24">Alex</span><span class="chat-time">9:04 AM</span></div>
+                                <div class="chat-text">I am currently switching between AWS <code>Cost Explorer</code>, Budgets, <code>Compute Optimizer</code>, and spreadsheets. The services operate primarily on ingested live data, so nothing really helps us model pre-deployment impact. We will have to do this manually.</div>
+                            </div>
+                        </div>
+                        <div class="chat-msg" role="listitem">
+                            <div class="chat-avatar av-violet">SR</div>
+                            <div class="chat-content">
+                                <div class="chat-meta"><span class="chat-name" style="color:#a78bfa">Sam</span><span class="chat-time">9:08 AM</span></div>
+                                <div class="chat-text">Even when we estimate by hand, we are still guessing on what the next three months look like. That is not a good position to be in before deployment.</div>
+                            </div>
+                        </div>
+                        <div class="chat-msg msg-frustrated" role="listitem">
+                            <div class="chat-avatar av-blue">JL</div>
+                            <div class="chat-content">
+                                <div class="chat-meta"><span class="chat-name" style="color:#60a5fa">Jordan</span><span class="chat-time">9:15 AM</span></div>
+                                <div class="chat-text">Every cycle we do this, and every cycle we get blindsided by spend. We are shooting darts in the dark for estimates, then deploying with our fingers crossed.</div>
+                            </div>
+                        </div>
+                        <div class="chat-msg msg-end" role="listitem">
+                            <div class="chat-avatar av-amber">AK</div>
+                            <div class="chat-content">
+                                <div class="chat-meta"><span class="chat-name" style="color:#fbbf24">Alex</span><span class="chat-time">9:16 AM</span></div>
+                                <div class="chat-text">If only we could enter projected spend and budget thresholds once, then get one unified report showing spend against budget thresholds, a reasonable forecast, and actionable recommendations, we would have real clarity to work with. Finance would also have an all-in-one report for documentation purposes.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scenario-outro" role="status" aria-live="polite" aria-atomic="true">
+                    <p class="scenario-outro-text" id="scenario-outro-text"></p>
+                    <button class="scenario-outro-up" id="scenario-outro-up" type="button" onclick="scrollToTopFromScenario()" aria-label="Scroll back to top">
+                        &#8593;
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══ View: Demo Mode ═══ -->
+    <div id="view-demo" class="view">
+        <div class="section-container experience-shell">
+            <div class="section-head">
+                <button class="back-btn" onclick="showHero()">&#8592; Back</button>
+                <h2 class="mode-title">Demo Agent Runbook</h2>
+                <p class="mode-subtitle">Watch the end-to-end automation flow: reset data, seed records, fetch costs, and generate analysis.</p>
+            </div>
+            <div class="terminal-card">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <span class="terminal-title">Running Demo..</span>
+                </div>
+                <div class="terminal-body" id="demo-steps"></div>
+            </div>
+            <div style="text-align:center">
+                <button class="btn btn-primary demo-report-btn" id="demo-report-btn" onclick="openDemoReport()">
+                    Open Report &#8594;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ View: Try It Yourself ═══ -->
+    <div id="view-tryit" class="view">
+        <div class="section-container experience-shell">
+            <div class="section-head">
+                <button class="back-btn" onclick="showHero()">&#8592; Back</button>
+                <h2 class="mode-title">Enter Your AWS Cost Data</h2>
+                <p class="mode-subtitle" id="period-hint">Provide at least 3 monthly points of data for meaningful analysis.</p>
+            </div>
+
+            <div class="example-bar">
+                <span class="example-label">Example row:</span>
+                <code id="date-example">2026-03</code>
+                <span>|</span>
+                <code>$4,200.00</code> <span>(AWS Spend)</span>
+                <span>|</span>
+                <code>$5,000.00</code> <span>(Budget)</span>
+            </div>
+
+            <div class="form-header">
+                <span id="date-header">Month (YYYY-MM)</span>
+                <span>AWS Spend ($)</span>
+                <span>Total Budget ($)</span>
+                <span></span>
+            </div>
+            <div id="cost-rows"></div>
+
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="addRow()">+ Add Month</button>
+                <button class="btn btn-primary" id="submit-btn" onclick="submitData()">
+                    Analyze &#8594;
+                </button>
+            </div>
+            <div id="form-feedback" class="feedback" style="display:none"></div>
+        </div>
+    </div>
+
+    <!-- ═══ View: Report ═══ -->
+    <div id="view-report" class="view" role="main" aria-labelledby="report-title">
+        <div class="section-container report-section" role="region" aria-label="Cost analysis report">
+            <button class="back-btn" onclick="showHero()" aria-label="Go back to the landing view">&#8592; Start Over</button>
+            <h2 id="report-title">Cost Analysis Report</h2>
+            <p class="report-subtitle" id="report-subtitle">A consolidated view of spend health, risk indicators, and action-ready recommendations.</p>
+            <div id="report-summary" aria-live="polite" aria-atomic="true"></div>
+            <div class="charts-grid" role="group" aria-label="Spend and utilization charts">
+                <section class="chart-card chart-card-wide" aria-labelledby="budget-chart-title">
+                    <h3 id="budget-chart-title">AWS Spend vs Budget</h3>
+                    <p id="budget-chart-desc" class="sr-only">Bar chart comparing monthly AWS spend against budget limit. Bar colors indicate healthy, near-limit, and critical utilization thresholds.</p>
+                    <canvas id="budget-chart" role="img" aria-describedby="budget-chart-desc">Monthly AWS spend versus budget chart.</canvas>
+                </section>
+                <section class="chart-card" aria-labelledby="trend-chart-title">
+                    <h3 id="trend-chart-title">Budget Utilization &amp; 3-Month Forecast</h3>
+                    <p id="trend-chart-desc" class="sr-only">Line chart showing actual monthly utilization percentages and a 3-month projected utilization forecast, including a budget limit threshold line.</p>
+                    <canvas id="trend-chart" role="img" aria-describedby="trend-chart-desc">Budget utilization and forecast chart.</canvas>
+                </section>
+                <section class="chart-card" aria-labelledby="delta-chart-title">
+                    <h3 id="delta-chart-title">Month-over-Month Spend Change</h3>
+                    <p id="delta-chart-desc" class="sr-only">Bar chart showing month-over-month spend deltas. Positive deltas indicate increased spend and negative deltas indicate reduced spend.</p>
+                    <canvas id="delta-chart" role="img" aria-describedby="delta-chart-desc">Month-over-month spend change chart.</canvas>
+                </section>
+            </div>
+            <section class="analysis-card" role="region" aria-labelledby="analysis-title">
+                <h3 id="analysis-title">AI Analysis &amp; Recommendations</h3>
+                <div id="analysis-content" role="status" aria-live="polite"></div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+    /* ═══════════════════════════════════════════════════════
+       FinOpsGuard Agent — Frontend Logic
+       ═══════════════════════════════════════════════════════ */
+
+    // Prevent browser from restoring scroll position on refresh
+    if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+    window.scrollTo(0, 0);
+
+    const VIEWS = ['view-hero', 'view-demo', 'view-tryit', 'view-report'];
+    let reportData = null;
+    let budgetChart = null;
+    let trendChart = null;
+    let deltaChart = null;
+    let rowCount = 0;
+    let scenarioCompleteTimeout = null;
+    let scenarioTypingInterval = null;
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SCENARIO_SEQUENCE_MS = 4050;
+    const SCENARIO_OUTRO_SEGMENTS = [
+        { text: 'FinOps', className: 'outro-accent' },
+        { text: 'Guard', className: 'outro-accent-strong' },
+        { text: '\u00A0does\u00A0', className: '' },
+        { text: 'just that', className: 'outro-accent' },
+    ];
+    const SCENARIO_OUTRO_TOTAL_CHARS = SCENARIO_OUTRO_SEGMENTS.reduce((acc, segment) => acc + segment.text.length, 0);
+    const SCENARIO_TYPE_MS = 46;
+    const VIEW_ANIMATION_DELAY_MS = {
+        'view-hero': 1300,
+        'view-demo': 700,
+        'view-tryit': 700,
+        'view-report': 700,
+    };
+
+    /* ── View Management ───────────────────────────────── */
+
+    function scheduleViewPersistence(id) {
+        const viewEl = document.getElementById(id);
+        if (!viewEl || viewEl.classList.contains('view-seen') || viewEl.dataset.persistScheduled === 'true') {
+            return;
+        }
+
+        viewEl.dataset.persistScheduled = 'true';
+        const delayMs = VIEW_ANIMATION_DELAY_MS[id] || 700;
+
+        window.setTimeout(() => {
+            viewEl.classList.add('view-seen');
+            delete viewEl.dataset.persistScheduled;
+        }, delayMs);
+    }
+
+    function focusViewEntryPoint(id) {
+        const viewEl = document.getElementById(id);
+        if (!viewEl) {
+            return;
+        }
+
+        const target = viewEl.querySelector('#home-main-content, h1, h2');
+        if (!target) {
+            return;
+        }
+
+        target.setAttribute('tabindex', '-1');
+        window.requestAnimationFrame(() => {
+            target.focus({ preventScroll: true });
+        });
+    }
+
+    function showView(id) {
+        const currentView = document.querySelector('.view.active');
+        if (currentView && currentView.id !== id) {
+            currentView.classList.add('view-seen');
+        }
+
+        VIEWS.forEach(v => document.getElementById(v).classList.toggle('active', v === id));
+        window.scrollTo(0, 0);
+        scheduleViewPersistence(id);
+        focusViewEntryPoint(id);
+    }
+
+    // Let the initial hero animation play once, then persist it for later navigations.
+    scheduleViewPersistence('view-hero');
+
+    function showHero() {
+        showView('view-hero');
+    }
+
+    function clearScenarioTimers() {
+        if (scenarioCompleteTimeout) {
+            window.clearTimeout(scenarioCompleteTimeout);
+            scenarioCompleteTimeout = null;
+        }
+        if (scenarioTypingInterval) {
+            window.clearInterval(scenarioTypingInterval);
+            scenarioTypingInterval = null;
+        }
+    }
+
+    function buildScenarioOutroMarkup(charCount) {
+        let remaining = charCount;
+        let html = '';
+
+        for (const segment of SCENARIO_OUTRO_SEGMENTS) {
+            if (remaining <= 0) {
+                break;
+            }
+
+            const take = Math.min(segment.text.length, remaining);
+            const textChunk = segment.text
+                .slice(0, take)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            if (segment.className) {
+                html += '<span class="' + segment.className + '">' + textChunk + '</span>';
+            } else {
+                html += '<span>' + textChunk + '</span>';
+            }
+
+            remaining -= take;
+        }
+
+        return html;
+    }
+
+    function triggerScenarioOutro(section) {
+        const outro = section ? section.querySelector('.scenario-outro') : null;
+        const outroText = document.getElementById('scenario-outro-text');
+        if (!section || !outro || !outroText) {
+            return;
+        }
+
+        section.classList.add('scenario-complete');
+        section.classList.remove('scenario-typing-done');
+
+        const startTyping = function () {
+            if (prefersReducedMotion) {
+                outroText.innerHTML = buildScenarioOutroMarkup(SCENARIO_OUTRO_TOTAL_CHARS);
+                section.classList.add('scenario-typing-done');
+                return;
+            }
+
+            outroText.innerHTML = '';
+            let charIndex = 0;
+            scenarioTypingInterval = window.setInterval(function () {
+                charIndex += 1;
+                outroText.innerHTML = buildScenarioOutroMarkup(charIndex);
+
+                if (charIndex >= SCENARIO_OUTRO_TOTAL_CHARS) {
+                    window.clearInterval(scenarioTypingInterval);
+                    scenarioTypingInterval = null;
+                    section.classList.add('scenario-typing-done');
+                }
+            }, SCENARIO_TYPE_MS);
+        };
+
+        startTyping();
+    }
+
+    function playScenarioSequence(section) {
+        if (!section) {
+            return;
+        }
+
+        section.classList.add('scenario-live');
+        section.classList.remove('scenario-complete');
+        section.classList.remove('scenario-typing-done');
+
+        const outroText = document.getElementById('scenario-outro-text');
+        if (outroText) {
+            outroText.innerHTML = '';
+        }
+
+        clearScenarioTimers();
+
+        const revealDelay = prefersReducedMotion ? 0 : SCENARIO_SEQUENCE_MS;
+        scenarioCompleteTimeout = window.setTimeout(function () {
+            triggerScenarioOutro(section);
+            scenarioCompleteTimeout = null;
+        }, revealDelay);
+    }
+
+    /* ── Demo Flow ─────────────────────────────────────── */
+
+    const DEMO_STEPS = [
+        { text: 'Clearing previous data...', endpoint: '/costs', method: 'DELETE' },
+        { text: 'Seeding sample cost records...', endpoint: '/costs/seed', method: 'POST' },
+        { text: 'Retrieving cost records...', endpoint: '/costs', method: 'GET' },
+        { text: 'Generating AI-powered report...', endpoint: '/report', method: 'GET' },
+    ];
+
+    async function startDemo() {
+        showView('view-demo');
+        const container = document.getElementById('demo-steps');
+        container.innerHTML = '';
+        document.getElementById('demo-report-btn').style.display = 'none';
+
+        // Render all steps as pending
+        DEMO_STEPS.forEach((step, i) => {
+            const div = document.createElement('div');
+            div.className = 'step';
+            div.id = 'step-' + i;
+            div.innerHTML =
+                '<span class="step-icon">&#9675;</span>' +
+                '<span class="step-text">' + step.text + '</span>' +
+                '<span class="step-detail"></span>';
+            container.appendChild(div);
+        });
+
+        // Execute each step
+        for (let i = 0; i < DEMO_STEPS.length; i++) {
+            const step = DEMO_STEPS[i];
+            const el = document.getElementById('step-' + i);
+            el.querySelector('.step-icon').innerHTML = '&#9679;';
+            el.classList.add('running');
+
+            try {
+                const resp = await fetch(step.endpoint, { method: step.method });
+                const data = await resp.json();
+                await delay(700);
+
+                el.querySelector('.step-icon').innerHTML = '&#10003;';
+                el.classList.remove('running');
+                el.classList.add('done');
+
+                if (step.endpoint === '/costs/seed') {
+                    el.querySelector('.step-detail').textContent = '— ' + data.count + ' records seeded';
+                } else if (step.endpoint === '/costs' && step.method === 'GET') {
+                    el.querySelector('.step-detail').textContent = '— ' + data.length + ' records loaded';
+                } else if (step.endpoint === '/report') {
+                    reportData = data;
+                    el.querySelector('.step-detail').textContent = '— analysis complete';
+                }
+            } catch (err) {
+                el.querySelector('.step-icon').innerHTML = '&#10007;';
+                el.classList.remove('running');
+                el.classList.add('error');
+                el.querySelector('.step-detail').textContent = '— ' + err.message;
+                return;
+            }
+        }
+
+        document.getElementById('demo-report-btn').style.display = 'inline-flex';
+    }
+
+    function openDemoReport() {
+        if (reportData) renderReport(reportData);
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    /* ── Try It Yourself ───────────────────────────────── */
+
+    function showTryIt() {
+        showView('view-tryit');
+        document.getElementById('cost-rows').innerHTML = '';
+        document.getElementById('form-feedback').style.display = 'none';
+        rowCount = 0;
+        addRow(); addRow(); addRow();
+    }
+
+    function addRow() {
+        const container = document.getElementById('cost-rows');
+        const i = rowCount++;
+        const row = document.createElement('div');
+        row.className = 'cost-row';
+        row.id = 'row-' + i;
+        row.innerHTML =
+            '<div class="input-wrap">' +
+                '<input type="text" id="month-' + i + '" placeholder="YYYY-MM" maxlength="7" />' +
+                '<span class="field-error" id="err-month-' + i + '"></span>' +
+            '</div>' +
+            '<div class="input-wrap">' +
+                '<input type="number" id="spend-' + i + '" placeholder="0.00" step="0.01" min="0" />' +
+                '<span class="field-error" id="err-spend-' + i + '"></span>' +
+            '</div>' +
+            '<div class="input-wrap">' +
+                '<input type="number" id="budget-' + i + '" placeholder="0.00" step="0.01" min="0.01" />' +
+                '<span class="field-error" id="err-budget-' + i + '"></span>' +
+            '</div>' +
+            '<div class="row-actions">' +
+                '<button class="btn-mini btn-sample" onclick="fillSample(' + i + ')" title="Fill with sample data">Sample</button>' +
+                '<button class="btn-mini btn-clear" onclick="clearRow(' + i + ')" title="Clear row values">Clear</button>' +
+                '<button class="btn-mini btn-remove" onclick="removeRow(' + i + ')" title="Remove row">&#10005;</button>' +
+            '</div>';
+        container.appendChild(row);
+    }
+
+    function removeRow(i) {
+        const row = document.getElementById('row-' + i);
+        if (row) row.remove();
+    }
+
+    function fillSample(i) {
+        const monthNum = (i % 12) + 1;
+        document.getElementById('month-' + i).value = '2026-' + String(monthNum).padStart(2, '0');
+        document.getElementById('spend-' + i).value = (Math.random() * 4000 + 1500).toFixed(2);
+        document.getElementById('budget-' + i).value = (Math.random() * 3000 + 4000).toFixed(2);
+        clearFieldErrors(i);
+    }
+
+    function clearRow(i) {
+        const monthInput = document.getElementById('month-' + i);
+        const spendInput = document.getElementById('spend-' + i);
+        const budgetInput = document.getElementById('budget-' + i);
+
+        if (monthInput) monthInput.value = '';
+        if (spendInput) spendInput.value = '';
+        if (budgetInput) budgetInput.value = '';
+
+        clearFieldErrors(i);
+    }
+
+    function clearFieldErrors(i) {
+        ['month', 'spend', 'budget'].forEach(f => {
+            const err = document.getElementById('err-' + f + '-' + i);
+            if (err) err.textContent = '';
+            const input = document.getElementById((f === 'month' ? 'month' : f === 'spend' ? 'spend' : 'budget') + '-' + i);
+            if (input) input.classList.remove('input-error');
+        });
+    }
+
+    function setFieldError(i, field, msg) {
+        const err = document.getElementById('err-' + field + '-' + i);
+        if (err) err.textContent = msg;
+        const input = document.getElementById(field + '-' + i);
+        if (input) input.classList.add('input-error');
+    }
+
+    function getVisibleRows() {
+        const rows = [];
+        for (let i = 0; i < rowCount; i++) {
+            if (!document.getElementById('row-' + i)) continue;
+            rows.push({
+                index: i,
+                month: document.getElementById('month-' + i).value.trim(),
+                aws_spend: document.getElementById('spend-' + i).value,
+                total_budget: document.getElementById('budget-' + i).value,
+                allocation_period: 'Monthly',
+            });
+        }
+        return rows;
+    }
+
+    function validateRows(rows) {
+        let valid = true;
+        const dateRe = /^\d{4}-\d{2}$/;
+        rows.forEach(r => {
+            clearFieldErrors(r.index);
+            if (!dateRe.test(r.month)) {
+                setFieldError(r.index, 'month', 'Use YYYY-MM format');
+                valid = false;
+            }
+            const spend = parseFloat(r.aws_spend);
+            if (isNaN(spend) || spend < 0) {
+                setFieldError(r.index, 'spend', 'Must be >= 0');
+                valid = false;
+            }
+            const budget = parseFloat(r.total_budget);
+            if (isNaN(budget) || budget <= 0) {
+                setFieldError(r.index, 'budget', 'Must be > 0');
+                valid = false;
+            }
+        });
+        return valid;
+    }
+
+    async function submitData() {
+        const rows = getVisibleRows();
+        if (rows.length < 3) {
+            showFeedback('Please provide at least 3 months of data.', 'error');
+            return;
+        }
+        if (!validateRows(rows)) {
+            showFeedback('Please fix the highlighted errors above.', 'error');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        showFeedback('Submitting your data...', 'loading');
+
+        // Clear existing records
+        await fetch('/costs', { method: 'DELETE' });
+
+        // Post each row
+        for (const r of rows) {
+            const resp = await fetch('/costs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    month: r.month,
+                    aws_spend: parseFloat(r.aws_spend),
+                    total_budget: parseFloat(r.total_budget),
+                    allocation_period: r.allocation_period,
+                }),
+            });
+            if (!resp.ok) {
+                showFeedback('Error submitting data — check your inputs.', 'error');
+                submitBtn.disabled = false;
+                return;
+            }
+        }
+
+        showFeedback('Generating AI analysis...', 'loading');
+        const reportResp = await fetch('/report');
+        if (!reportResp.ok) {
+            showFeedback('Error generating report.', 'error');
+            submitBtn.disabled = false;
+            return;
+        }
+
+        reportData = await reportResp.json();
+        submitBtn.disabled = false;
+        renderReport(reportData);
+    }
+
+    function showFeedback(msg, type) {
+        const el = document.getElementById('form-feedback');
+        el.style.display = 'block';
+        el.className = 'feedback ' + type;
+        el.textContent = msg;
+    }
+
+    /* ── Report Rendering ──────────────────────────────── */
+
+    function renderReport(data) {
+        showView('view-report');
+
+        // ─ Data summary table ─
+        const summary = document.getElementById('report-summary');
+        const totalSpend = data.records.reduce((acc, r) => acc + r.aws_spend, 0);
+        const avgUtil = data.records.reduce((acc, r) => acc + r.budget_used_pct, 0) / data.records.length;
+        const peakRecord = data.records.reduce((peak, current) =>
+            current.budget_used_pct > peak.budget_used_pct ? current : peak,
+            data.records[0]
+        );
+        const utilizationDelta = data.records.length > 1
+            ? data.records[data.records.length - 1].budget_used_pct - data.records[0].budget_used_pct
+            : 0;
+
+        let html = '<div class="kpi-grid" role="list" aria-label="Report highlights">' +
+            '<div class="kpi-card" role="listitem"><div class="kpi-label">Total Spend</div><div class="kpi-value">$' +
+            totalSpend.toLocaleString('en-US', { maximumFractionDigits: 0 }) + '</div></div>' +
+            '<div class="kpi-card" role="listitem"><div class="kpi-label">Average Utilization</div><div class="kpi-value">' +
+            avgUtil.toFixed(1) + '%</div></div>' +
+            '<div class="kpi-card" role="listitem"><div class="kpi-label">Peak Risk Month</div><div class="kpi-value">' +
+            peakRecord.month + ' (' + peakRecord.budget_used_pct + '%)</div></div>' +
+            '</div>' +
+            '<div class="kpi-grid" role="list" aria-label="Trend indicators" style="grid-template-columns: 1fr; margin-top: -2px; margin-bottom: 16px;">' +
+            '<div class="kpi-card" role="listitem"><div class="kpi-label">Utilization Trend</div><div class="kpi-value">' +
+            (utilizationDelta >= 0 ? '+' : '') + utilizationDelta.toFixed(1) +
+            '% from first to latest month</div></div></div>' +
+            '<div class="summary-table-wrap"><table class="summary-table" aria-describedby="report-table-caption"><caption id="report-table-caption" class="sr-only">Monthly AWS spend, budget, and utilization percentages.</caption><thead><tr>' +
+            '<th scope="col">Month</th><th scope="col">AWS Spend</th><th scope="col">Budget</th><th scope="col">Used %</th>' +
+            '</tr></thead><tbody>';
+
+        data.records.forEach(r => {
+            const cls = r.budget_used_pct >= 95 ? 'critical' : r.budget_used_pct >= 80 ? 'warning' : 'ok';
+            html += '<tr>' +
+                '<th scope="row">' + r.month + '</th>' +
+                '<td>$' + r.aws_spend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td>' +
+                '<td>$' + r.total_budget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td>' +
+                '<td><span class="pct-badge ' + cls + '">' + r.budget_used_pct + '%</span></td>' +
+                '</tr>';
+        });
+        html += '</tbody></table></div>';
+        summary.innerHTML = html;
+
+        // ─ Charts ─
+        renderBudgetChart(data.records);
+        renderTrendChart(data.records, data.forecast || []);
+        renderDeltaChart(data.records);
+
+        // ─ LLM Analysis ─
+        const el = document.getElementById('analysis-content');
+        if (typeof marked !== 'undefined') {
+            el.innerHTML = marked.parse(data.analysis);
+        } else {
+            el.textContent = data.analysis;
+        }
+    }
+
+    function renderBudgetChart(records) {
+        const ctx = document.getElementById('budget-chart').getContext('2d');
+        if (budgetChart) budgetChart.destroy();
+
+        const nearLimitPct = 80;
+        const criticalLimitPct = 95;
+
+        const centerUtilizationLabelsPlugin = {
+            id: 'centerUtilizationLabels',
+            afterDatasetsDraw: function(chart) {
+                const spendMeta = chart.getDatasetMeta(0);
+                if (!spendMeta || spendMeta.hidden) {
+                    return;
+                }
+
+                const chartCtx = chart.ctx;
+                chartCtx.save();
+                chartCtx.textAlign = 'center';
+                chartCtx.textBaseline = 'middle';
+                chartCtx.font = window.innerWidth < 640
+                    ? '500 10px "IBM Plex Mono", "Fira Code", monospace'
+                    : '500 11px "IBM Plex Mono", "Fira Code", monospace';
+
+                spendMeta.data.forEach((bar, index) => {
+                    const record = records[index];
+                    if (!record || typeof bar.base !== 'number' || typeof bar.y !== 'number') {
+                        return;
+                    }
+
+                    const barHeight = Math.abs(bar.base - bar.y);
+                    if (barHeight < 20) {
+                        return;
+                    }
+
+                    const pct = record.budget_used_pct;
+                    const label = pct.toFixed(1) + '%';
+                    const subtleTone = pct >= criticalLimitPct
+                        ? 'rgba(254, 202, 202, 0.64)'
+                        : pct >= nearLimitPct
+                            ? 'rgba(255, 237, 213, 0.62)'
+                            : 'rgba(219, 234, 254, 0.62)';
+
+                    chartCtx.fillStyle = subtleTone;
+                    chartCtx.shadowColor = 'rgba(2, 6, 23, 0.12)';
+                    chartCtx.shadowBlur = 1.5;
+
+                    const centerY = bar.y + (bar.base - bar.y) / 2;
+                    chartCtx.fillText(label, bar.x, centerY);
+                });
+
+                chartCtx.restore();
+            },
+        };
+
+        budgetChart = new Chart(ctx, {
+            type: 'bar',
+            plugins: [centerUtilizationLabelsPlugin],
+            data: {
+                labels: records.map(r => r.month),
+                datasets: [
+                    {
+                        label: 'AWS Spend',
+                        data: records.map(r => r.aws_spend),
+                        backgroundColor: records.map(r =>
+                            r.budget_used_pct >= criticalLimitPct ? 'rgba(239, 68, 68, 0.78)' :
+                            r.budget_used_pct >= nearLimitPct ? 'rgba(249, 115, 22, 0.78)' :
+                            'rgba(59, 130, 246, 0.74)'
+                        ),
+                        borderColor: records.map(r =>
+                            r.budget_used_pct >= criticalLimitPct ? '#ef4444' :
+                            r.budget_used_pct >= nearLimitPct ? '#fb923c' :
+                            '#3b82f6'
+                        ),
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Budget Limit',
+                        data: records.map(r => r.total_budget),
+                        type: 'line',
+                        borderColor: '#34d399',
+                        borderWidth: 2,
+                        borderDash: [8, 4],
+                        pointRadius: 4,
+                        pointBackgroundColor: '#34d399',
+                        fill: false,
+                        tension: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                animation: prefersReducedMotion ? false : { duration: 760, easing: 'easeOutQuart' },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: {
+                        onClick: function() {
+                            // Keep legend purely informational for this chart.
+                            return;
+                        },
+                        labels: {
+                            color: '#b8cadf',
+                            font: { size: 12 },
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded',
+                            generateLabels: function(chart) {
+                                const defaults = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                return defaults.concat([
+                                    {
+                                        text: 'Near Budget Limit (80% to 94.9%)',
+                                        fillStyle: '#fb923c',
+                                        strokeStyle: '#fb923c',
+                                        lineWidth: 1,
+                                        hidden: false,
+                                        pointStyle: 'rectRounded',
+                                    },
+                                    {
+                                        text: 'Critical Risk (95%+ of budget)',
+                                        fillStyle: '#ef4444',
+                                        strokeStyle: '#ef4444',
+                                        lineWidth: 1,
+                                        hidden: false,
+                                        pointStyle: 'rectRounded',
+                                    },
+                                ]);
+                            },
+                        },
+                    },
+                    tooltip: {
+                        backgroundColor: '#08121e',
+                        titleColor: '#e6edf7',
+                        bodyColor: '#b8cadf',
+                        borderColor: '#28445f',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.dataset.label + ': $' + ctx.raw.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#8fa6be' }, grid: { color: 'rgba(90, 118, 148, 0.18)' } },
+                    y: {
+                        ticks: { color: '#8fa6be', callback: v => '$' + (v/1000).toFixed(1) + 'k' },
+                        grid: { color: 'rgba(90, 118, 148, 0.18)' },
+                    },
+                },
+            },
+        });
+    }
+
+    function renderTrendChart(records, forecast) {
+        const ctx = document.getElementById('trend-chart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+
+        // Actual utilization from API records
+        const pcts = records.map(r => r.budget_used_pct);
+        const labels = records.map(r => r.month);
+
+        // Forecast computed server-side via Holt's Dampened Trend — consume directly, no client re-computation
+        const forecastLabels = (forecast || []).map(f => f.month);
+        const forecastPcts   = (forecast || []).map(f => f.pct);
+
+        const allLabels  = [...labels, ...forecastLabels];
+        const actualData = [...pcts, ...forecastLabels.map(() => null)];
+
+        // Forecast line: null for all actual points, then bridge from last actual + forecast values
+        const fData = pcts.map(() => null);
+        if (forecastPcts.length > 0) {
+            fData[fData.length - 1] = pcts[pcts.length - 1]; // bridge connector
+            forecastPcts.forEach(v => fData.push(v));
+        }
+
+        const thresholdData = allLabels.map(() => 100);
+
+        const gradientGreen = ctx.createLinearGradient(0, 0, 0, 300);
+        gradientGreen.addColorStop(0, 'rgba(59, 130, 246, 0.22)');
+        gradientGreen.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: allLabels,
+                datasets: [
+                    {
+                        label: 'Actual Utilization',
+                        data: actualData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradientGreen,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#3b82f6',
+                        borderWidth: 2.5,
+                    },
+                    {
+                        label: 'Forecast (3-mo HDT)',
+                        data: fData,
+                        borderColor: '#fb923c',
+                        borderDash: [6, 4],
+                        tension: 0.35,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#fb923c',
+                        pointStyle: 'triangle',
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                    {
+                        label: 'Budget Limit',
+                        data: thresholdData,
+                        borderColor: 'rgba(239, 68, 68, 0.55)',
+                        borderDash: [4, 4],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                animation: prefersReducedMotion ? false : { duration: 780, easing: 'easeOutQuart' },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { labels: { color: '#b8cadf', font: { size: 11 }, usePointStyle: true } },
+                    tooltip: {
+                        backgroundColor: '#08121e',
+                        titleColor: '#e6edf7',
+                        bodyColor: '#b8cadf',
+                        borderColor: '#28445f',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw + '%' : '') }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#8fa6be' }, grid: { color: 'rgba(90, 118, 148, 0.18)' } },
+                    y: {
+                        ticks: { color: '#8fa6be', callback: v => v + '%' },
+                        grid: { color: 'rgba(90, 118, 148, 0.18)' },
+                        suggestedMin: 0,
+                        suggestedMax: 120,
+                    },
+                },
+            },
+        });
+    }
+
+    function renderDeltaChart(records) {
+        const ctx = document.getElementById('delta-chart').getContext('2d');
+        if (deltaChart) deltaChart.destroy();
+
+        if (records.length < 2) return;
+
+        const labels = [];
+        const deltas = [];
+        for (let i = 1; i < records.length; i++) {
+            labels.push(records[i].month);
+            deltas.push(Math.round((records[i].aws_spend - records[i - 1].aws_spend) * 100) / 100);
+        }
+
+        deltaChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Spend Change ($)',
+                    data: deltas,
+                    backgroundColor: deltas.map(d => d >= 0 ? 'rgba(239, 68, 68, 0.74)' : 'rgba(16, 185, 129, 0.74)'),
+                    borderColor: deltas.map(d => d >= 0 ? '#ef4444' : '#34d399'),
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                animation: prefersReducedMotion ? false : { duration: 720, easing: 'easeOutQuart' },
+                interaction: { intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#08121e',
+                        titleColor: '#e6edf7',
+                        bodyColor: '#b8cadf',
+                        borderColor: '#28445f',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.raw;
+                                return (v >= 0 ? '+' : '') + '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#8fa6be' }, grid: { color: 'rgba(90, 118, 148, 0.18)' } },
+                    y: {
+                        ticks: { color: '#8fa6be', callback: v => (v >= 0 ? '+$' : '-$') + Math.abs(v).toLocaleString() },
+                        grid: { color: 'rgba(90, 118, 148, 0.18)' },
+                    },
+                },
+            },
+        });
+    }
+
+    /* ── Scenario Section: trigger animations on scroll ────── */
+    (function () {
+        var section = document.getElementById('scenario-section');
+        if (!section) return;
+        var obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    playScenarioSequence(section);
+                    obs.unobserve(section);
+                }
+            });
+        }, { threshold: 0.12 });
+        obs.observe(section);
+    }());
+
+    function scrollToTopFromScenario() {
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    }
+
+    function scrollToProblem() {
+        var section = document.getElementById('scenario-section');
+        if (!section) return;
+        // Reset so animation replays on every button click
+        section.classList.remove('scenario-live');
+        section.classList.remove('scenario-complete');
+        section.classList.remove('scenario-typing-done');
+        const outroText = document.getElementById('scenario-outro-text');
+        if (outroText) {
+            outroText.innerHTML = '';
+        }
+        clearScenarioTimers();
+        section.offsetHeight; // force reflow
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.setTimeout(function () {
+            playScenarioSequence(section);
+        }, 520);
+    }
+    </script>
+</body>
+</html>

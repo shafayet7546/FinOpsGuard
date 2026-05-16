@@ -1,91 +1,88 @@
-from pydantic import BaseModel, ConfigDict, Field
+﻿from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
 
 
 class HealthResponse(BaseModel):
-    """Service health status - returned with GET /health endpoint"""
+    """Service health status"""
 
-    model_config = ConfigDict(
-        extra="forbid",  # security: prevent unexpected fields in health check response
-        json_schema_extra={
-            "example": {
-                "status": "healthy",
-                "service": "FinOpsGuard",
-                "version": "1.0.0",
-            }
-        },
-    )
-    # health status is set to default value for now
+    model_config = ConfigDict(extra="forbid")
+
     status: Literal["healthy", "degraded"] = Field(
-        default="healthy", description="Overall health status of the service"
+        default="healthy", description="Overall service health"
     )
-    service: str = "FinOpsGuard"
+    service: str = "FinOpsGuard Agent"
     version: str = "1.0.0"
 
 
-class CloudMetricsResponse(BaseModel):
-    """Monthly cloud cost and carbon metrics - returned with GET /costs endpoint"""
+class CostCreate(BaseModel):
+    """Input model for creating cost record with POST /costs"""
 
     model_config = ConfigDict(
         extra="forbid",
         json_schema_extra={
             "example": {
                 "month": "2026-03",
-                "aws_spend": 317.50,
-                "carbon_kg": 128.6,
-                "budget_used_pct": 31.75,
+                "aws_spend": 4200.00,
+                "total_budget": 5000.00,
+                "allocation_period": "Monthly",
             }
         },
     )
-    id: int | None = Field(default=None, description="Database record ID")
+
     month: str = Field(
         ..., pattern=r"^\d{4}-\d{2}$", description="Month in YYYY-MM format"
     )
-    aws_spend: float = Field(..., ge=0, description="AWS spend for the month")
-    carbon_kg: float = Field(..., ge=0, description="Estimated CO2 emissions in kg")
+    aws_spend: float = Field(..., ge=0, description="AWS spend for the month in USD")
+    total_budget: float = Field(
+        ..., gt=0, description="Total allocated budget in USD"
+    )
+    allocation_period: Literal["Monthly"] = Field(
+        ..., description="Budget allocation period"
+    )
+
+
+class CostResponse(BaseModel):
+    """Output model for a cost record with computed budget utilization"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: int = Field(..., description="Database record ID")
+    month: str
+    aws_spend: float
+    total_budget: float
+    allocation_period: str
     budget_used_pct: float = Field(
-        ..., ge=0, le=100, description="Percentage of budget used"
+        ..., description="Computation formula: aws_spend / total_budget * 100"
     )
 
 
-class CarbonReportResponse(BaseModel):
-    """Carbon impact assessment - returned by GET /carbon endpoint"""
-    model_config = ConfigDict(
-        extra="forbid",
-        json_schema_extra={
-            "example": {
-                "carbon_score": "low",
-                "kg_co2": 128.6,
-                "recommendation": "Switch to t4g.micro instance for 30%+ savings",
-            }
-        },
-    )
-    id: int | None = Field(default=None, description="Database record ID")
-    # strict field validations  
-    carbon_score: Literal["low", "medium", "high"] = Field(
-        ..., description="Carbon impact score based on emissions"
-    )
-    kg_co2: float = Field(..., ge=0, description="Estimated CO2 emissions in kg")
-    recommendation: str = Field(
-        ...,
-        min_length=10,
-        description="Optimization recommendation for the cloud resource",
-    )
+class ReportRecord(BaseModel):
+    """Single record within a report response"""
+
+    month: str
+    aws_spend: float
+    total_budget: float
+    allocation_period: str
+    budget_used_pct: float
+
+
+class ForecastPoint(BaseModel):
+    """Single Holt's Dampened Trend forecast point returned by the /report endpoint"""
+
+    month: str
+    spend: float
+    budget: float
+    pct: float
 
 
 class ReportResponse(BaseModel):
-    """PDF report generation status - returned by GET /report endpoint"""
+    """Full report with cost data, Holt's Dampened Trend forecast, and LLM-generated analysis"""
 
-    model_config = ConfigDict(
-        extra="forbid",
-        json_schema_extra={
-            "example": {
-                "message": "PDF report generated and stored in S3 successfully",
-                "report_url": None,
-                "generated_at": "2026-03-15T12:00:00Z",
-            }
-        },
+    records: list[ReportRecord]
+    forecast: list[ForecastPoint] = Field(
+        default_factory=list,
+        description="3-month Holt's Dampened Trend forecast computed server-side",
     )
-    message: str = Field(..., description="Status message")
-    report_url: str | None = Field(None, description="S3 URL of the generated PDF")
-    generated_at: str = Field(..., description="Generated timestamp")
+    analysis: str = Field(
+        ..., description="LLM-generated or fallback cost analysis"
+    )
