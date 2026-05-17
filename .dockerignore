@@ -8,8 +8,9 @@ env/
 .env
 .git
 .gitignore
-terraform/
-*.tfstate
-*.tfstate.backup
+tests/
+e2e/
+.github/
+docs/
+*.db
 .DS_Store
-__pycache__

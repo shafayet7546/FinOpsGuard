@@ -1,227 +1,215 @@
-<p align="center">
-  <img src="assets/platform_logo.png" width="700">
+﻿<p align="center">
+  <img src="assets/Logo.jpg" width="700" alt="FinOpsGuard platform logo">
 </p>
 
 <p align="center">
-  <!-- Languages / Framework -->
-  <img src="https://img.shields.io/badge/python-3.11-blue" />
-  <img src="https://img.shields.io/badge/FastAPI-0.115-green" />
+  <img src="https://img.shields.io/badge/python-3.12-blue" />
+  <img src="https://img.shields.io/badge/FastAPI-0.135.1-009688" />
+  <img src="https://img.shields.io/badge/OpenAI-gpt--5.4--mini-412991" />
   <br/>
-  <!-- Cloud / Infrastructure -->
-  <img src="https://img.shields.io/badge/AWS-cloud-orange" />
-  <img src="https://img.shields.io/badge/Terraform-IaC-purple" />
   <img src="https://img.shields.io/badge/Docker-container-blue" />
-  <img src="https://img.shields.io/badge/Kubernetes-EKS-blue" />
+  <img src="https://img.shields.io/badge/Render-deploy-46E3B7" />
+  <img src="https://img.shields.io/badge/database-SQLite-003B57" />
   <br/>
-  <!-- DevOps / Observability / Testing -->
-  <img src="https://img.shields.io/badge/CI/CD-GitHub%20Actions-black" />
-  <img src="https://img.shields.io/badge/Prometheus-monitoring-orange" />
-  <img src="https://img.shields.io/badge/Grafana-dashboards-orange" />
-  <img src="https://img.shields.io/badge/tests-pytest-blue" />
-  <img src="https://img.shields.io/badge/Security-Trivy-red" />
+  <img src="https://img.shields.io/github/actions/workflow/status/shafayet7546/finopsguard/ci.yml?branch=main&label=CI%2FCD" />
+  <img src="https://img.shields.io/badge/tests-pytest-0A9EDC" />
+  <img src="https://img.shields.io/badge/coverage-%E2%89%A570%25-brightgreen" />
+  <img src="https://img.shields.io/badge/license-MIT-black" />
 </p>
 
 ## FinOpsGuard
 
-**FinOpsGuard** is a cloud-native AWS FinOps platform that unifies cost monitoring, carbon-impact estimation, and proactive budget governance to help organizations reduce cloud waste, strengthen financial accountability, and enable more automated, sustainability-aware cloud operations at scale.
+**FinOpsGuard** is a cloud cost simulation and forecasting tool, built to provide engineering and FinOps teams the ability to model future monthly expenditure of planned cloud service rollouts, all ***before*** actual deployment.
 
 ## Why FinOpsGuard?
 
-Cloud cost monitoring, budget governance, and sustainability insights are often fragmented across separate tools and workflows, limiting timely visibility into inefficiencies and making optimization more reactive than strategic. FinOpsGuard was built to address this gap by consolidating these signals into a unified operational workflow.
+Cloud and FinOps teams typically switch between services such as AWS Cost Explorer + Budgets, Compute Optimizer, CloudWatch, and spreadsheets, most of which are built primarily for live data and produce separate reports. As a result:
+- Teams are forced into constant context switching across services to manually interpret data and identify inefficiencies in compute utilization, spending patterns, and more.
+- If teams want insight into the impact of a future cloud service rollout, they cannot input mock projected expenditure (based on expected service cost), generate a short-term forecast, or receive recommendations and actionable optimization guidance tailored to that future spend profile.
 
+Due to this existing feature gap, teams often resort to guesswork or manual estimation, which can lead to unexpected expenditure, budget breaches, and avoidable testing spend. **What if there was a way to gain clarity before deployment?**
 
-## Implemented Capabilities
+FinOpsGuard replaces that sprawl with an **all-in-one, unified executive report**: budget-to-threshold utilization models, proactive warnings when spend risk rises, short-term forecast powered by the Holt's Dampened Trend algorithm, and AI-powered recommendations and analysis from OpenAI gpt-5.4-mini.
 
-- **Cloud-native Project Foundation**: Repository is structured to support planned future infrastructure automation (Terraform), containerization (Docker/Kubernetes), CI/CD, testing, and observability.
+Run reliable what-if scenarios through one workflow, detect budget risks earlier, prevent overruns, and move from visibility to decision-ready optimization faster.
 
-- **API**: Developed FastAPI REST API with validated request/response models and automatic OpenAPI documentation. Core endpoints (`/health`, `/costs`, `/carbon`, `/report`) are defined with structured schemas.
+## Capabilities
 
-- **Schema Validation**: Enforced Strict data contracts enforced using Pydantic models for rejecting unexpected fields and maintaining consistent API behavior(`extra="forbid"`).
+- **REST API** — FastAPI with validated request/response models and automatic OpenAPI docs. Core endpoints: `/health`, `/costs` (CRUD), `/costs/seed`, `/report`.
 
-- **Persistence Layer (SQLite)**: SQLite database with SQLAlchemy ORM for persistent storage. Core endpoints (`/costs` and `/carbon`) now query the database and return strcutured, validated responses using Pydantic models.
+- **Schema Validation** — Strict Pydantic v2 contracts (`extra="forbid"`, `Field()` validators) enforce month format (`YYYY-MM`), non-negative spend, positive budgets, and monthly-only allocation periods (`Monthly`).
 
-- **Infrastructure as Code (Terraform)**: Provisioned AWS infrastructure using Terraform, including a VPC for network isolation, an S3 bucket for report storage, and an IAM role for secure service access. Structured the configuration into dedicated files for provisioning, variables, outputs, and core resource definitions (main.tf) to improve maintainability and separation of concerns.
+- **Holt's Dampened Trend Forecasting** — `/report` computes a 3-month forecast server-side using double exponential smoothing with a damping factor. A smoothed level and smoothed trend are updated on each observation; the damping factor (`φ`) decelerates projected growth across successive steps, producing a realistic curve rather than a straight-line extrapolation.
 
-- **Containerization (Docker)**: Containerized the application using Docker to ensure consistent runtime environments across both development and deployment. The Dockerfile defines all the environment configurations, dependencies, and application startup through Uvicorn.
+- **LLM Analysis** — `/report` compiles cost history and requests observations alongside recommendations from OpenAI's `gpt-5.4-mini` model. When `OPENAI_API_KEY` is not set, a deterministic fallback is presented.
 
-## Roadmap
-- AWS cost ingestion and carbon estimation logic
-- PDF report generation and S3 storage
-- Docker + Kubernetes (EKS) deployment
-- GitHub Actions CI/CD pipeline
-- Observability (Prometheus + Grafana)
-- Security scanning (Trivy) (**planned, but subject to change**)
+- **Interactive UX** — Landing page with two flows: a Demo Agent terminal-style walkthrough and a Try-It-Yourself data entry form with validation, sample autofill, and rendered report output.
 
+- **Persistence** — SQLAlchemy ORM over SQLite. Environment-driven `DATABASE_URL` enables migration to a managed database without code changes.
 
-## Architecture and Technology
+- **Containerization** — Containerized application with Multi-stage Dockerfile as non-root user and pinned base image.
 
-### Current Implementation
+- **CI/CD** — GitHub Actions pipeline: Ruff lint → Pytest with coverage ≥ 70% → Docker build + Grype vulnerability scan → Render deploy.
+
+- **Deployment** — Containerized  and deployed to Render with automatic deploys from GitHub.
+
+## Architecture
+
+### System Diagram
+![System Architecture](assets/Architectural_Diagram.png)
+
+### Technology Stack
 
 | Layer | Technology |
-|------|------------|
-| Backend | FastAPI (Python) |
+|-------|------------|
+| Backend | FastAPI 0.135.1 (Python 3.12) |
 | Validation | Pydantic v2 |
-| Persistence | SQLite + SQLAlchemy ORM |
-| Infrastructure  | Terraform |
-| Containerization  | Docker |
+| Persistence | SQLite + SQLAlchemy 2.0 ORM |
+| Forecasting Algorithm | Holt's Dampened Trend — double exponential smoothing (server-side, zero dependencies) |
+| AI Analysis | OpenAI model (`gpt-5.4-mini`) with deterministic fallback |
+| Frontend | HTML/CSS/JS, Chart.js, Marked.js |
+| Containerization | Docker (multi-stage, non-root) |
+| CI/CD | GitHub Actions (Ruff, Pytest, Grype) |
+| Deployment | Render |
 
-### Target Platform
+### API Endpoints
 
-| Layer | Technology |
-|------|------------|
-| Orchestration  | Kubernetes (EKS) |
-| CI/CD  | GitHub Actions |
-| Observability  | Prometheus, Grafana |
-| Security  | Trivy |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Service health status and version |
+| `GET` | `/costs` | List all cost records with budget utilization |
+| `POST` | `/costs` | Create a new cost record |
+| `DELETE` | `/costs/{cost_id}` | Delete a single cost record |
+| `DELETE` | `/costs` | Clear all cost records |
+| `POST` | `/costs/seed` | Seed randomized demo data |
+| `GET` | `/report` | Generate report with LLM analysis |
 
----  
-## Design Principles & Engineering Decisions  
+## Design Decisions
 
-### Principles
-- **Automation-oriented operations**  
-Repetitive monitoring, reporting, and governance workflows should be designed for automation to reduce manual overhead, improve consistency, and support operational scaling.
+- **Contract-first validation** — All Pydantic models enforce `extra='forbid'` to reject unexpected fields, and `Field()` validators enforce month format, non-negative spend, positive budgets, and constrained allocation periods.
 
-- **Unified visibility**  
-Cost, Budget, and Carbon signals should be accessible in one operational workflow.
+- **Separated API and persistence models** — Pydantic defines the public contract; SQLAlchemy handles storage. Swapping databases requires only changing `DATABASE_URL`.
 
-- **Proactive decision-making**  
-Teams should be alerted in advance to inefficiencies and budget threshold hits before they do become larger operational problems.
+- **SQLite for current phase** — Supports local-first development, rapid iteration, and zero operational overhead. The ORM abstraction makes migration to PostgreSQL or RDS seamless.
 
-- **Actionable outputs**  
-Insights should translate into recommendations that support cost-efficient, and sustainability-aware infrastructure decisions over time.
+- **Holt's Dampened Trend forecast owned by the backend** — Forecast logic lives exclusively in `ForecastEngine` in `main.py` and is returned as a typed `forecast` field on the `/report` response. The frontend only visualizes the data — no forecast computation in JavaScript. This keeps the algorithm in one auditable place and makes it easy to swap or tune.
 
-- **Cloud-native extensibility**:  
-The platform should be designed to evolve toward containerized, observable, and automated deployment patterns.
+- **LLM with graceful fallback** — `/report` calls OpenAI's API for `gpt-5.4-mini` for analysis and recommendations. If no API key is configured at runtime or the call fails, deterministic in-app analysis ensures the product still works in local and CI environments.
 
-### Decisions
+- **Docker containerization** — Ensures consistent runtime behavior across development, CI, and production. Multi-stage build with non-root user follows best practices.
 
-- **Strict Pydantic validation on all response models (Contract-first approach)**  
- All models enforce `extra='forbid'` to reject unexpected fields. `Field()` validators are used to enforce rules including non-negative values (`ge=0`), percentage ranges (`le=100`), minimum lengths, and semantic version patterns. 
+- **Deployment pivot: AWS to Render** — The project direction was intentionally shifted from AWS deployment to Render deployment to reduce infrastructure overhead and control budget utilization while continuing to ship quickly. The app remains fully containerized and environment-driven, preserving a clean path back to AWS when needed.
 
-- **Separation of concerns between API and database models**  
-Pydantic models define the public API contract, while SQLAlchemy ORM models handle persistence concerns. This separation improves maintainability and makes future migration to managed databases such as Amazon RDS, seamless.
+- **Pinned dependencies** — Exact version pinning in `requirements.txt` ensures reproducibility across local development, CI/CD, and container builds.
 
-- **SQLite with SQLAlchemy ORM for persistence**  
-SQLite was selected for the current phase to support local-first development, rapid iteration, and low operational overhead. Planned integration of AWS storage solutions.
+## Deployment Pivot and AWS Transition Plan
 
-- **Infrastructure as Code using Terraform**  
-AWS resources were provisioned entirely using Terraform to ensure consistent, repeatable infrastructure deployment. The configuration is organized into separate files
+FinOpsGuard is currently deployed on Render to keep operating cost lower and release iteration faster after AWS budget utilization constraints. If migrating back to AWS, the recommended target architecture is EKS for API/runtime workloads and Lambda for event-driven workloads.
 
-- **Containerization using Docker**  
-The application is containerized to ensure consistent runtime behavior across varying development and deployment environments. Docker encapsulates dependencies, isolates the application environment, and simplifies execution. This also enables easier future integration with CI/CD pipelines and orchestration platforms.
+### Current deployment posture
 
-- **Pinned dependencies in requirements.txt**  
-Exact dependency pinning ensures reproducibility across local development, CI/CD pipelines, and future container deployments.
+- **Active runtime** — Render deployment triggered from GitHub.
+- **Why this path now** — Lower infrastructure complexity and faster release iteration.
+- **AWS readiness preserved** — Containerization and env-driven config keep migration straightforward.
+
+### AWS target architecture (high level)
+
+1. VPC across at least two Availability Zones with public and private subnets.
+2. Public ALB for ingress, routing to EKS services/pods in private subnets.
+3. Horizontal scaling at both pod level (HPA) and node level (Cluster Autoscaler or Karpenter).
+4. EKS for long-lived API/runtime workloads, Lambda for bursty asynchronous or event-driven tasks.
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - pip
 - Git
-- Terraform
-- Docker
+- Docker (optional, for containerized runs)
 
-## Environment
+## Environment Variables
 
-Development note: Primary development was performed on **Linux**, as project is intended to align with cloud-native workflows. 
-> Disclaimer: The application can be also be ran on Windows systems. Please follow the appropriate virtual environment activation command below:
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Optional | SQLAlchemy connection string override. If unset, the app defaults to SQLite (`sqlite:///./finopsguard.db`). |
+| `OPENAI_API_KEY` | Optional | Enables LLM-powered analysis in `/report`. |
+| `OPENAI_MODEL` | Optional | OpenAI model override. Defaults to `gpt-5.4-mini`. |
 
+### SQLite DATABASE_URL example (optional override)
+
+```bash
+export DATABASE_URL="sqlite:///./finopsguard.db"
+```
 
 ## Quick Start
+
 ```bash
 git clone https://github.com/shafayet7546/finopsguard.git
 cd finopsguard
 
 python -m venv venv
 
-# Linux | macOS
+# Linux / macOS
 source venv/bin/activate
 
-# Windows (Powershell as Administrator)
-venv\Scripts\activate
+# Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
+
+# If script execution is blocked (run once per session)
+# Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 
 pip install -r requirements.txt
+
+# Optional — enables live LLM analysis
+# Linux / macOS:  export OPENAI_API_KEY="your_key"
+# Windows:        $env:OPENAI_API_KEY="your_key"
+
 uvicorn app.main:app --reload
 ```
-#### Access Swagger UI (default port): http://localhost:8000/docs
-#### Alternative Format: http://localhost:(port)/docs
 
-### Quick Start with Docker
+Open **http://localhost:8000/docs** for the Swagger UI.
 
-#### 1. Install Docker
+If DATABASE_URL is not set, the app uses local SQLite automatically.
 
-**Linux (Ubuntu/Debian):**
+## Quick Start with Docker
+
 ```bash
-sudo apt update
-sudo apt install docker.io
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -aG docker $USER
-# Logout and login again to apply group changes
-```
-
-**Windows:**
-Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). Ensure WSL 2 is enabled if using Windows Subsystem for Linux.
-
-**macOS:**
-Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
-
-#### 2. Verify Installation
-```bash
-docker --version
-```
-
-#### 3. Clone and Build
-```bash
+# Build
 git clone https://github.com/shafayet7546/finopsguard.git
 cd finopsguard
 docker build -t finopsguard .
-```
 
-#### 4. Run the Application
-```bash
+# Run (fallback analysis mode - no OpenAI key)
 docker run -p 8000:8000 finopsguard
+
+# Run (LLM analysis enabled)
+docker run -p 8000:8000 -e OPENAI_API_KEY=your_key finopsguard
 ```
 
-#### Swagger UI: http://localhost:8000/docs
+Open **http://localhost:8000/docs** for the Swagger UI.
 
----
+## Quality Gates
 
-### API Endpoints
+```bash
+# Lint
+ruff check .
 
-| Method | Endpoint | Purpose | Current Status |
-|--------|----------|---------|----------------|
-| GET | /health | Service health check | Static response |
-| GET | /costs | Returns Monthly cloud cost metrics | Backed by SQLite |
-| GET | /carbon | Returns Infrastructure Carbon-impact Assessment | Backed by SQLite |
-| GET | /report | Returns generated PDF summary report: Cost, Carbon, and Optimization metrics. | Placeholder response |
+# Format
+ruff format .
 
-
-## Repository Structure
-```
-finopsguard/
-├── app/
-│   ├── main.py           # FastAPI entry point and route definitions
-│   ├── models.py         # Pydantic v2 response models
-│   ├── database.py       # SQLite connection and session management
-│   └── db_models.py      # SQLAlchemy ORM models (Cost, Carbon)
-├── terraform/            # IaC — VPC, S3, IAM (EKS/RDS planned)
-│   ├── .terraform.lock.hcl
-|   ├── main.tf        
-│   ├── outputs.tf         
-│   ├── providers.tf       
-│   └── variables.tf 
-├── k8s/                  # (planned) Helm charts + ArgoCD manifests
-├── lambda/               # (planned) AWS Lambda functions for cost/carbon processing
-├── tests/                # (planned) Pytest unit + Playwright E2E
-├── .github/
-│   └── workflows/        # (planned) GitHub Actions CI/CD pipeline
-├── docs/                 # (planned) Architecture diagrams + cost reports
-├── .gitignore            # Prevents commit of local, sensitive, and build artifacts
-├── .dockerignore         # Excludes unnecessary files from Docker build 
-├── Dockerfile            # Defines application's container image for consistent runtime envs
-├── requirements.txt
-└── README.md
+# Tests with coverage
+pytest --cov=app --cov-report=term-missing --cov-fail-under=70
 ```
 
----
+## CI/CD
+
+The GitHub Actions pipeline in .github/workflows/ci.yml executes:
+
+1. Ruff lint and format checks.
+2. Pytest with coverage threshold enforcement.
+3. Docker image build.
+4. Grype vulnerability scan.
+5. Render deployment trigger (main branch pushes only).
+
+## License
+
+This project is licensed under the MIT License. See LICENSE for details.

@@ -27,10 +27,16 @@ terraform/.terraform/
 # Logs & temp
 *.log
 
+# Test / coverage / lint artifacts
+.coverage
+.coverage.*
+.pytest_cache/
+.ruff_cache/
+
 # SQLite db files
 *.db
 finopsguard.db
-*.sqite
+*.sqlite
 *.sqlite3
 
 # Terraform

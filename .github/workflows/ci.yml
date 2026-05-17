@@ -1,0 +1,117 @@
+# CI/CD Pipeline
+#   1. Lint    → Ruff checks code style and catches bugs; fails early on style issues
+#   2. Test    → Pytest runs all tests and provides coverage measurement; fails before building container
+#   3. Build   → Docker builds the container image; fails before scanning
+#   3. Secure  → Grype Scans for vulnerabilities in image; fails before deploying
+#   5. Deploy  → Triggers Render deploy (main branch); deploys only if every other component of pipeline is successful
+#
+# RUNS EVERYTIME ON:
+#   - Every push to main
+#   - Every pull request targeting main
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# ─── Job 1: Lint ─────────────────────────────────────────────────────
+# Runs Ruff to check for code style issues, unused imports, and bugs
+
+jobs:
+  lint:
+    name: Lint (Ruff)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repo code into the runner
+      - uses: actions/checkout@v4
+
+      # Step 2: Set up Python (must match your project version)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Step 3: Install ruff
+      - run: pip install ruff
+
+      # Step 4: Run the linter on .py files — fails the job if there are violations
+      - run: ruff check .
+
+      # Step 5: Verify formatting adheres to ruff's style
+      - run: ruff format --check .
+
+# ─── Job 2: Test ─────────────────────────────────────────────────────
+# Runs pytest with coverage. Fails if tests fail OR coverage < threshold.
+
+  test:
+    name: Test (Pytest + Coverage)
+    runs-on: ubuntu-latest
+    # Only run tests if linting does pass 
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Install all project dependencies + tools
+      - run: pip install -r requirements.txt
+
+      # Run pytest with coverage measurement
+      # --cov=app         → measure coverage of the app/ directory only
+      # --cov-report=term-missing → print which lines are NOT covered
+      # --cov-fail-under=70       → fail if coverage drops below 70%
+      - run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+
+# ─── Job 3: Build + Scan ────────────────────────────────────────────
+# Builds the Docker image, then scans it with Grype for vulnerabilities.
+# Decided to not use popular scanner 'Trivy' due to recent supply chain attack
+
+  build-and-scan:
+    name: Docker Build + Grype Scan
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the Docker image using multi-stage Dockerfile
+      - name: Build Docker image
+        run: docker build -t finopsguard:ci .
+
+      # Grype scans the built image for:
+      #   - OS package vulnerabilities (e.g., openssl CVEs in the base image)
+      #   - Python package vulnerabilities (e.g., known issues in dependencies)
+
+      # Configured as follows:
+      #   severity-cutoff: high → only fail on HIGH or CRITICAL vulnerabilities
+      #   fail-on: true        → fail the pipeline if vulnerabilities found
+      #   only-fixed: true     → skip CVEs that have no fix available yet
+      - name: Grype vulnerability scan
+        uses: anchore/scan-action@v6
+        with:
+          image: "finopsguard:ci"
+          severity-cutoff: "high"
+          fail-build: "true"
+          only-fixed: "true"
+
+# ─── Job 4: Deploy ──────────────────────────────────────────────────
+# Triggers deployment to Render via their Deploy Hook URL.
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    # Only deploy on push to main, not on pull requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # Trigger Render's deploy hook — this tells Render to pull
+      # the latest code from main and rebuild/redeploy the service
+      - name: Trigger Render deploy
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

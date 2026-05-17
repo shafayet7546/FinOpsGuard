@@ -1,0 +1,37 @@
+# Ruff tool configuration.
+[tool.ruff]
+# Target Python version for linting and formatting behavior.
+target-version = "py312"
+# Maximum allowed line length.
+line-length = 88
+
+# Ruff lint rule configuration.
+[tool.ruff.lint]
+# Enabled rule groups: pycodestyle, pyflakes, isort, pyupgrade, bugbear, simplify.
+select = ["E", "F", "I", "UP", "B", "SIM"]
+# Ignore long-line linting because formatting handles wrapping.
+ignore = ["E501"]
+
+# Import sorting behavior inside Ruff.
+[tool.ruff.lint.isort]
+# Treat app imports as first-party.
+known-first-party = ["app"]
+
+# Pytest configuration.
+[tool.pytest.ini_options]
+# Directories where pytest looks for tests.
+testpaths = ["tests"]
+# Default pytest flags: verbose output and short tracebacks.
+addopts = "-v --tb=short"
+
+# Coverage run configuration.
+[tool.coverage.run]
+# Measure coverage for application code only.
+source = ["app"]
+
+# Coverage report configuration.
+[tool.coverage.report]
+# Show missing lines in coverage output.
+show_missing = true
+# Minimum total coverage required.
+fail_under = 70
