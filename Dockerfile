@@ -9,6 +9,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Pull latest Debian security patches into the runtime layer.
+RUN apt-get update \
+	&& apt-get upgrade -y \
+	&& rm -rf /var/lib/apt/lists/*
+
 # Run as non-root user for security (OWASP container best practice)
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
