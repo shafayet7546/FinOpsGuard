@@ -9,13 +9,20 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /root/.local
+# Run as non-root user for security (OWASP container best practice)
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+COPY --from=builder /root/.local /home/appuser/.local
 
 COPY /app ./app/
+COPY /assets ./assets/
 
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONBUFFERED=1
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+
+# Switch to non-root user
+USER appuser
 
 EXPOSE 8000
 
