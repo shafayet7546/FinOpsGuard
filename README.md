@@ -1,7 +1,6 @@
 ﻿<p align="center">
   <img src="assets/FinOpsGuard_Logo.png" width="600" alt="FinOpsGuard platform logo">
 </p>
-
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12-blue" />
   <img src="https://img.shields.io/badge/FastAPI-0.135.1-009688" />
