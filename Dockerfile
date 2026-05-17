@@ -18,6 +18,10 @@ COPY --from=builder /install /usr/local
 COPY /app ./app/
 COPY /assets ./assets/
 
+# Create a writable location for SQLite when running as non-root.
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
+
+ENV DATABASE_URL=sqlite:////app/data/finopsguard.db
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
