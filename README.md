@@ -1,5 +1,5 @@
 ﻿<p align="center">
-  <img src="assets/Logo.jpg" width="700" alt="FinOpsGuard platform logo">
+  <img src="assets/FinOpsGuard_Logo.png" width="600" alt="FinOpsGuard platform logo">
 </p>
 
 <p align="center">
@@ -19,19 +19,23 @@
 
 ## FinOpsGuard
 
-**FinOpsGuard** is a cloud cost simulation and forecasting tool, built to provide engineering and FinOps teams the ability to model future monthly expenditure of planned cloud service rollouts, all ***before*** actual deployment.
+**FinOpsGuard** is a cloud cost simulation, forcasting, and report generation tool, built to provide engineering and FinOps teams insight into future service rollouts, all ***before*** deployment.
 
 ## Why FinOpsGuard?
+Cloud and FinOps teams typically switch between services such as **AWS Cost Explorer + Budgets, Compute Optimizer, CloudWatch, and spreadsheets**, most of which are built primarily for **live data** and produce separate reports. 
 
-Cloud and FinOps teams typically switch between services such as AWS Cost Explorer + Budgets, Compute Optimizer, CloudWatch, and spreadsheets, most of which are built primarily for live data and produce separate reports. As a result:
-- Teams are forced into constant context switching across services to manually interpret data and identify inefficiencies in compute utilization, spending patterns, and more.
-- If teams want insight into the impact of a future cloud service rollout, they cannot input mock projected expenditure (based on expected service cost), generate a short-term forecast, or receive recommendations and actionable optimization guidance tailored to that future spend profile.
+As a result:
+- Teams are forced into **constant context** switching across services to **manually** interpret data and identify inefficiencies in compute utilization, spending patterns, and more.
+- If teams want insight into the impact of a future cloud service rollout, they **cannot input mock projected expenditure** (based on expected service cost), **generate a short-term forecast** (*lacks the mandatory 30 day billing data*), or receive **recommendations and actionable optimization** guidance tailored to that future spend profile.
 
-Due to this existing feature gap, teams often resort to guesswork or manual estimation, which can lead to unexpected expenditure, budget breaches, and avoidable testing spend. **What if there was a way to gain clarity before deployment?**
+Due to this existing feature gap, teams often resort to guesswork or manual estimation, which can lead to unexpected expenditure, budget breaches, and avoidable testing spend. <br> **What if there was a way to gain clarity before deployment?**
 
-FinOpsGuard replaces that sprawl with an **all-in-one, unified executive report**: budget-to-threshold utilization models, proactive warnings when spend risk rises, short-term forecast powered by the Holt's Dampened Trend algorithm, and AI-powered recommendations and analysis from OpenAI gpt-5.4-mini.
+### FinOpsGuard replaces that sprawl with a single, unified executive report featuring: 
+- `Budget-to-threshold` utilization models
+- Short-term forecast powered by the `Holt's Dampened Trend Method`
+- AI-powered recommendations and analysis from `OpenAI's gpt-5.4-mini model`
 
-Run reliable what-if scenarios through one workflow, detect budget risks earlier, prevent overruns, and move from visibility to decision-ready optimization faster.
+***Run reliable what-if scenarios through one workflow, detect budget risks earlier, and move from visibility to decision-ready optimization faster.***
 
 ## Capabilities
 
@@ -43,7 +47,7 @@ Run reliable what-if scenarios through one workflow, detect budget risks earlier
 
 - **LLM Analysis** — `/report` compiles cost history and requests observations alongside recommendations from OpenAI's `gpt-5.4-mini` model. When `OPENAI_API_KEY` is not set, a deterministic fallback is presented.
 
-- **Interactive UX** — Landing page with two flows: a Demo Agent terminal-style walkthrough and a Try-It-Yourself data entry form with validation, sample autofill, and rendered report output.
+- **Interactive UX** — Landing page with two flows: a Demo Agent terminal-style walkthrough and a Try-It-Yourself data entry form with validation, sample autofill, and rendered report output. This UX was built with the assistance of modern tools.
 
 - **Persistence** — SQLAlchemy ORM over SQLite. Environment-driven `DATABASE_URL` enables migration to a managed database without code changes.
 

@@ -1332,17 +1332,16 @@
             <div class="hero-badge">AI-Powered FinOps Intelligence</div>
             <h1 id="home-title">FinOps<span class="accent">Guard</span></h1>
             <p class="hero-sub" id="home-subtitle">
-                
-                Turn monthly cloud cost inputs into an executive-ready decision brief.
+                Plan, predict, and optimize cloud spend, all before deployment 
             </p>
             <ul class="hero-feature-list" role="list" aria-label="Core FinOpsGuard features">
                 <li class="hero-feature" role="listitem">
                     <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
-                    <span><strong>Budget Threshold Visibility:</strong> monthly utilization with anticipated new service expenditure, against budget limits in one glance.</span>
+                    <span><strong>Budget Threshold Visibility:</strong> visualize the anticipated monthly utilization to budget thresholds of the new service rollout.</span>
                 </li>
                 <li class="hero-feature" role="listitem">
                     <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
-                    <span><strong>Forecasting Engine:</strong> Holt's Dampened Trend projection for the next three months.</span>
+                    <span><strong>Forecasting Engine:</strong> Holt's Dampened Trend Projection </span>
                 </li>
                 <li class="hero-feature" role="listitem">
                     <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
@@ -1363,11 +1362,11 @@
                 <button class="btn btn-problem" onclick="scrollToProblem()" aria-label="Jump to problem scenario section">
                     The Problem
                 </button>
-                <a class="btn btn-docs" href="https://github.com/shafaaz11/finopsguard/blob/main/README.md" target="_blank" rel="noopener noreferrer" aria-label="Open project documentation in a new tab">
+                <a class="btn btn-docs" href="" target="_blank" rel="noopener noreferrer" aria-label="Open project documentation in a new tab">
                     &#128196; Documentation
                 </a>
             </div>
-            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;">Technology stack grouped by delivery layer.</p>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;"> Technology Stack </p>
             <div class="tech-stack" role="list" aria-label="Technology stack">
                 <div class="tech-category cat-backend" role="listitem" aria-labelledby="stack-backend-label">
                     <div class="tech-category-label" id="stack-backend-label"><span class="cat-dot"></span>Backend &amp; Data</div>
@@ -1384,7 +1383,7 @@
                     <p class="tech-summary">Executive insight generation, Holt's Dampened Trend forecasting, and chart-driven storytelling for spend and risk signals.</p>
                     <div class="tech-badges" aria-label="AI and visualization technologies">
                         <span class="tech-badge">OpenAI: gpt-5.4-mini</span>
-                        <span class="tech-badge">Holt's Dampened Trend Algo</span>
+                        <span class="tech-badge">Holt's Dampened Trend Forcast Method</span>
                         <span class="tech-badge">Chart.js</span>
                         <span class="tech-badge">Marked</span>
                     </div>
@@ -1393,8 +1392,8 @@
                     <div class="tech-category-label" id="stack-quality-label"><span class="cat-dot"></span>Testing &amp; Quality</div>
                     <p class="tech-summary">Automated confidence checks for API behavior, code quality, and container vulnerability posture.</p>
                     <div class="tech-badges" aria-label="Testing and quality technologies">
-                        <span class="tech-badge">Ruff</span>
                         <span class="tech-badge">Pytest</span>
+                        <span class="tech-badge">Ruff</span>
                         <span class="tech-badge">Grype</span>
                     </div>
                 </div>
@@ -1402,8 +1401,8 @@
                     <div class="tech-category-label" id="stack-infra-label"><span class="cat-dot"></span>Infrastructure &amp; CI/CD</div>
                     <p class="tech-summary">Containerized runtime and CI/CD orchestration from automated checks to managed deployment.</p>
                     <div class="tech-badges" aria-label="Infrastructure and deployment technologies">
-                        <span class="tech-badge">GitHub Actions</span>
                         <span class="tech-badge">Docker</span>
+                        <span class="tech-badge">GitHub Actions</span>
                         <span class="tech-badge">Render</span>
                     </div>
                 </div>
@@ -1413,7 +1412,7 @@
         <!-- ── Pain Point Scenario Section ── -->
         <section class="scenario-section" id="scenario-section" role="region" aria-labelledby="scenario-title">
             <div class="scenario-inner">
-                <h2 class="scenario-title" id="scenario-title">Days Before a New AWS Service Rollout</h2>
+                <h2 class="scenario-title" id="scenario-title">Days before a new AWS service rollout</h2>
                 <p class="scenario-desc">Month-end pressure, live-data-only tools, and another rollout decision made with incomplete visibility.</p>
 
                 <!-- Chat window -->
@@ -1429,35 +1428,42 @@
                             <div class="chat-avatar av-blue">JL</div>
                             <div class="chat-content">
                                 <div class="chat-meta"><span class="chat-name" style="color:#60a5fa">Jordan</span><span class="chat-time">9:02 AM</span></div>
-                                <div class="chat-text">Team, finance review is in 48 hours. Before we approve this new service rollout, I need one view of budget vs threshold, a 3-month forecast, and clear actions.</div>
+                                <div class="chat-text">Team, finance review is in 48 hours. Our previous service rollout exceeded spending estimations significantly
+                                    As a result, before we approve this new service rollout, will need a report with budget vs threshold, forecast for the next couple months, and clear actionable plans if close to budget thresholds.</div>
                             </div>
                         </div>
                         <div class="chat-msg" role="listitem">
                             <div class="chat-avatar av-amber">AK</div>
                             <div class="chat-content">
                                 <div class="chat-meta"><span class="chat-name" style="color:#fbbf24">Alex</span><span class="chat-time">9:04 AM</span></div>
-                                <div class="chat-text">I am currently switching between AWS <code>Cost Explorer</code>, Budgets, <code>Compute Optimizer</code>, and spreadsheets. The services operate primarily on ingested live data, so nothing really helps us model pre-deployment impact. We will have to do this manually.</div>
+                                <div class="chat-text">I am currently switching between AWS <code>Cost Explorer</code>, Budgets, <code>Compute Optimizer</code>, and spreadsheets. Since AWS services operate primarily on ingested live data, nothing really helps us model pre-deployment impact. Working on it manually</div>
                             </div>
                         </div>
                         <div class="chat-msg" role="listitem">
                             <div class="chat-avatar av-violet">SR</div>
                             <div class="chat-content">
                                 <div class="chat-meta"><span class="chat-name" style="color:#a78bfa">Sam</span><span class="chat-time">9:08 AM</span></div>
-                                <div class="chat-text">Even when we estimate by hand, we are still guessing on what the next three months look like. That is not a good position to be in before deployment.</div>
+                                <div class="chat-text">Doing it manually, I fear the same overspend will occur this time around too. <br>
+                                                       Still guessing what the next three months look like, which finance won't be fond of</div>
                             </div>
                         </div>
                         <div class="chat-msg msg-frustrated" role="listitem">
                             <div class="chat-avatar av-blue">JL</div>
                             <div class="chat-content">
                                 <div class="chat-meta"><span class="chat-name" style="color:#60a5fa">Jordan</span><span class="chat-time">9:15 AM</span></div>
-                                <div class="chat-text">Every cycle we do this, and every cycle we get blindsided by spend. We are shooting darts in the dark for estimates, then deploying with our fingers crossed.</div>
+                                <div class="chat-text">Every cycle we do this, and every cycle we get blindsided by spend. Troublesome, we truly are shooting darts in the dark for estimates, then deploying with our fingers crossed.</div>
                             </div>
                         </div>
                         <div class="chat-msg msg-end" role="listitem">
                             <div class="chat-avatar av-amber">AK</div>
                             <div class="chat-content">
                                 <div class="chat-meta"><span class="chat-name" style="color:#fbbf24">Alex</span><span class="chat-time">9:16 AM</span></div>
-                                <div class="chat-text">If only we could enter projected spend and budget thresholds once, then get one unified report showing spend against budget thresholds, a reasonable forecast, and actionable recommendations, we would have real clarity to work with. Finance would also have an all-in-one report for documentation purposes.
+                                <div class="chat-text">Frustrating, if only we could enter a rough estimate of projected spend and budget thresholds once, and get one unified report showing:
+                                    <br> - spend against budget thresholds models
+                                    <br> - a reasonable short-term forecast, 
+                                    <br> - an automatic analysis/recommendations of cost and compute <br> 
+                                    <br> We would have some clarity on what to expect, save time, and be prepared with the insight on potential optimizations<br> 
+                                         Finance would also have an all-in-one report for documentation purposes.
                                 </div>
                             </div>
                         </div>
