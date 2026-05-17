@@ -77,6 +77,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
 
+    env:
+        FORCE_JAVASCRIPT_ACTIONS_TO_NODE25: true
+
     steps:
       - uses: actions/checkout@v6
 
@@ -93,7 +96,7 @@ jobs:
       #   fail-on: true        → fail the pipeline if vulnerabilities found
       #   only-fixed: true     → skip CVEs that have no fix available yet
       - name: Grype vulnerability scan
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7.4.0
         with:
           image: "finopsguard:ci"
           severity-cutoff: "high"
