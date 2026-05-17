@@ -27,10 +27,10 @@ jobs:
 
     steps:
       # Step 1: Check out the repo code into the runner
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Step 2: Set up Python (must match your project version)
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -53,9 +53,9 @@ jobs:
     needs: lint
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -66,7 +66,7 @@ jobs:
       # --cov=app         → measures coverage of the app/directory only
       # --cov-report=term-missing → print which lines are NOT covered
       # --cov-fail-under=70       → fail if coverage drops below 70%
-      - run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+      - run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=70
 
 # ─── Job 3: Build + Scan ────────────────────────────────────────────
 # Builds the Docker image, then scans it with Grype for vulnerabilities.
@@ -78,7 +78,7 @@ jobs:
     needs: test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Build the Docker image using multi-stage Dockerfile
       - name: Build Docker image
