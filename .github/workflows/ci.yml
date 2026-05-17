@@ -34,8 +34,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Step 3: Install ruff
-      - run: pip install ruff
+      # Step 3: Install the same Ruff version pinned in the project
+      - run: pip install ruff==0.11.6
 
       # Step 4: Run the linter on .py files — fails the job if there are violations
       - run: ruff check .
@@ -63,7 +63,7 @@ jobs:
       - run: pip install -r requirements.txt
 
       # Run pytest with coverage measurement
-      # --cov=app         → measure coverage of the app/ directory only
+      # --cov=app         → measures coverage of the app/directory only
       # --cov-report=term-missing → print which lines are NOT covered
       # --cov-fail-under=70       → fail if coverage drops below 70%
       - run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70

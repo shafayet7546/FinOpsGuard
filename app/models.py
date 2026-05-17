@@ -1,5 +1,6 @@
-﻿from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -33,9 +34,7 @@ class CostCreate(BaseModel):
         ..., pattern=r"^\d{4}-\d{2}$", description="Month in YYYY-MM format"
     )
     aws_spend: float = Field(..., ge=0, description="AWS spend for the month in USD")
-    total_budget: float = Field(
-        ..., gt=0, description="Total allocated budget in USD"
-    )
+    total_budget: float = Field(..., gt=0, description="Total allocated budget in USD")
     allocation_period: Literal["Monthly"] = Field(
         ..., description="Budget allocation period"
     )
@@ -83,6 +82,4 @@ class ReportResponse(BaseModel):
         default_factory=list,
         description="3-month Holt's Dampened Trend forecast computed server-side",
     )
-    analysis: str = Field(
-        ..., description="LLM-generated or fallback cost analysis"
-    )
+    analysis: str = Field(..., description="LLM-generated or fallback cost analysis")

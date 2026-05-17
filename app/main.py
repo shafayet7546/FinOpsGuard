@@ -1,31 +1,28 @@
 import os
 import random
-
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends
-
-load_dotenv()  # reads .env into os.environ before anything else
-from sqlalchemy.orm import Session
-from fastapi.responses import HTMLResponse
 from pathlib import Path
-from fastapi.staticfiles import StaticFiles
 
-# OpenAI dependency check, built to be gracefully disabled if not installed 
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
+
+# OpenAI dependency check, built to be gracefully disabled if not installed
 try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
 
+from app.database import Base, SessionLocal, engine
 from app.db_models import Cost
 from app.models import (
-    HealthResponse,
     CostCreate,
     CostResponse,
-    ReportRecord,
     ForecastPoint,
+    HealthResponse,
+    ReportRecord,
     ReportResponse,
 )
-from app.database import Base, SessionLocal, engine
 
 Base.metadata.create_all(bind=engine)
 
@@ -45,8 +42,11 @@ def _to_cost_response(record: Cost) -> CostResponse:
         aws_spend=record.aws_spend,
         total_budget=record.total_budget,
         allocation_period=record.allocation_period,
-        budget_used_pct=_calculate_budget_used_pct(record.aws_spend, record.total_budget),
+        budget_used_pct=_calculate_budget_used_pct(
+            record.aws_spend, record.total_budget
+        ),
     )
+
 
 def _get_ordered_cost_records(db: Session) -> list[Cost]:
     """Fetch cost records which are ordered chronologically by: month and id."""
@@ -88,6 +88,7 @@ async def health_check():
 
 
 # ── Costs CRUD ──
+
 
 @app.get("/costs", response_model=list[CostResponse], tags=["finops"])
 async def get_costs(db: Session = Depends(get_db)):
@@ -139,6 +140,7 @@ async def delete_all_costs(db: Session = Depends(get_db)):
 
 # ── Seed Demo Data ──
 
+
 @app.post("/costs/seed", status_code=201, tags=["finops"])
 async def seed_demo_data(db: Session = Depends(get_db)):
     """Seed the database with randomized demo cost data"""
@@ -188,7 +190,9 @@ async def seed_demo_data(db: Session = Depends(get_db)):
                 "aws_spend": record.aws_spend,
                 "total_budget": record.total_budget,
                 "allocation_period": record.allocation_period,
-                "budget_used_pct": _calculate_budget_used_pct(record.aws_spend, record.total_budget),
+                "budget_used_pct": _calculate_budget_used_pct(
+                    record.aws_spend, record.total_budget
+                ),
             }
         )
 
@@ -200,6 +204,7 @@ async def seed_demo_data(db: Session = Depends(get_db)):
 
 
 # ── Report with LLM Analysis ──
+
 
 class ForecastEngine:
     """Simple Holt's dampened trend forecasting engine."""
@@ -223,8 +228,12 @@ class ForecastEngine:
 
         for i in range(1, len(spends)):
             prev_level = level
-            level = self.alpha * spends[i] + (1 - self.alpha) * (level + self.phi * trend)
-            trend = self.beta * (level - prev_level) + (1 - self.beta) * self.phi * trend
+            level = self.alpha * spends[i] + (1 - self.alpha) * (
+                level + self.phi * trend
+            )
+            trend = (
+                self.beta * (level - prev_level) + (1 - self.beta) * self.phi * trend
+            )
 
         forecasts: list[dict] = []
         last_budget = records[-1].total_budget
@@ -240,7 +249,7 @@ class ForecastEngine:
 
             damped_trend_total = 0.0
             for j in range(1, h + 1):
-                damped_trend_total += self.phi ** j
+                damped_trend_total += self.phi**j
 
             projected_spend = max(0.0, round(level + damped_trend_total * trend, 2))
             projected_pct = _calculate_budget_used_pct(projected_spend, last_budget)
@@ -269,7 +278,9 @@ class ReportService:
         """Convert DB rows into ReportRecord objects with computed budget %."""
         report_records: list[ReportRecord] = []
         for record in db_records:
-            budget_used_pct = _calculate_budget_used_pct(record.aws_spend, record.total_budget)
+            budget_used_pct = _calculate_budget_used_pct(
+                record.aws_spend, record.total_budget
+            )
             report_records.append(
                 ReportRecord(
                     month=record.month,
@@ -357,7 +368,9 @@ class ReportService:
 
         avg_spend = sum(spends) / len(spends)
         total_change = spends[-1] - spends[0] if len(spends) > 1 else 0
-        pct_change = (total_change / spends[0] * 100) if spends[0] > 0 and len(spends) > 1 else 0
+        pct_change = (
+            (total_change / spends[0] * 100) if spends[0] > 0 and len(spends) > 1 else 0
+        )
 
         lines = ["## Fallback Summary"]
         lines.append(f"- Avg monthly spend: **${avg_spend:,.0f}**")
@@ -387,11 +400,20 @@ class ReportService:
 
         risk_pct = forecasts[-1]["pct"] if forecasts else latest.budget_used_pct
         if risk_pct >= 100:
-            risk, reason = "CRITICAL", "Projected spend exceeds budget within the forecast window."
+            risk, reason = (
+                "CRITICAL",
+                "Projected spend exceeds budget within the forecast window.",
+            )
         elif risk_pct >= 90:
-            risk, reason = "HIGH", "Spend is approaching budget ceiling with upward momentum."
+            risk, reason = (
+                "HIGH",
+                "Spend is approaching budget ceiling with upward momentum.",
+            )
         elif risk_pct >= 75:
-            risk, reason = "MODERATE", "Utilization is elevated but not yet at critical levels."
+            risk, reason = (
+                "MODERATE",
+                "Utilization is elevated but not yet at critical levels.",
+            )
         else:
             risk, reason = "LOW", "Spending is well within budget allocation."
 
@@ -402,6 +424,7 @@ class ReportService:
 
 
 report_service = ReportService()
+
 
 @app.get("/report", response_model=ReportResponse, tags=["finops"])
 async def generate_report(db: Session = Depends(get_db)):

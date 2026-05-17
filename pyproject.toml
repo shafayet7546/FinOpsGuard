@@ -2,6 +2,8 @@
 [tool.ruff]
 # Target Python version for linting and formatting behavior.
 target-version = "py312"
+# Enforce the same Ruff version across local, editor, and CI runs.
+required-version = "==0.11.6"
 # Maximum allowed line length.
 line-length = 88
 
@@ -16,6 +18,10 @@ ignore = ["E501"]
 [tool.ruff.lint.isort]
 # Treat app imports as first-party.
 known-first-party = ["app"]
+
+# FastAPI's Depends(...) is a declarative marker, not mutable default state.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
 
 # Pytest configuration.
 [tool.pytest.ini_options]

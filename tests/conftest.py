@@ -14,7 +14,9 @@ from app.main import app, get_db
 
 # Dedicated SQLite database for tests
 TEST_DATABASE_URL = "sqlite:///./test_finopsguard.db"
-test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+test_engine = create_engine(
+    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
