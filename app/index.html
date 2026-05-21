@@ -1346,7 +1346,7 @@
                 </li>
                 <li class="hero-feature" role="listitem">
                     <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
-                    <span><strong>Forecasting Engine:</strong> Holt's Dampened Trend Projection </span>
+                    <span><strong>Forecasting Engine:</strong> Holt's Damped Trend Projection </span>
                 </li>
                 <li class="hero-feature" role="listitem">
                     <span class="hero-feature-icon" aria-hidden="true">&#9679;</span>
@@ -1390,10 +1390,10 @@
                 </div>
                 <div class="tech-category cat-ai" role="listitem" aria-labelledby="stack-ai-label">
                     <div class="tech-category-label" id="stack-ai-label"><span class="cat-dot"></span>AI &amp; Visualization</div>
-                    <p class="tech-summary">Executive insight generation, Holt's Dampened Trend forecasting, and chart-driven storytelling for spend and risk signals.</p>
+                    <p class="tech-summary">Executive insight generation, Holt's Damped Trend forecasting, and chart-driven storytelling for spend and risk signals.</p>
                     <div class="tech-badges" aria-label="AI and visualization technologies">
                         <span class="tech-badge">OpenAI: gpt-5.4-mini</span>
-                        <span class="tech-badge">Holt's Dampened Trend Forcast Method</span>
+                        <span class="tech-badge">Holt's Damped Trend Forcast Method</span>
                         <span class="tech-badge">Chart.js</span>
                         <span class="tech-badge">Marked</span>
                     </div>
@@ -2230,7 +2230,7 @@
         const pcts = records.map(r => r.budget_used_pct);
         const labels = records.map(r => r.month);
 
-        // Forecast computed server-side via Holt's Dampened Trend — consume directly, no client re-computation
+        // Forecast computed server-side via Holt's Damped Trend — consume directly, no client re-computation
         const forecastLabels = (forecast || []).map(f => f.month);
         const forecastPcts   = (forecast || []).map(f => f.pct);
 

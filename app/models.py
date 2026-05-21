@@ -66,7 +66,7 @@ class ReportRecord(BaseModel):
 
 
 class ForecastPoint(BaseModel):
-    """Single Holt's Dampened Trend forecast point returned by the /report endpoint"""
+    """Single Holt's Damped Trend forecast point returned by the /report endpoint"""
 
     month: str
     spend: float
@@ -75,11 +75,11 @@ class ForecastPoint(BaseModel):
 
 
 class ReportResponse(BaseModel):
-    """Full report with cost data, Holt's Dampened Trend forecast, and LLM-generated analysis"""
+    """Full report with cost data, Holt's Damped Trend forecast, and LLM-generated analysis"""
 
     records: list[ReportRecord]
     forecast: list[ForecastPoint] = Field(
         default_factory=list,
-        description="3-month Holt's Dampened Trend forecast computed server-side",
+        description="3-month Holt's Damped Trend forecast computed server-side",
     )
     analysis: str = Field(..., description="LLM-generated or fallback cost analysis")

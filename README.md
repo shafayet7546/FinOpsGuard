@@ -31,7 +31,7 @@ Due to this existing feature gap, teams often resort to guesswork or manual esti
 
 ### FinOpsGuard replaces that sprawl with a single unified report featuring: 
 - `Budget-to-threshold` utilization models
-- Short-term forecast powered by the `Holt's Dampened Trend Method`
+- Short-term forecast powered by the `Holt's Damped Trend Method`
 - AI-powered recommendations and analysis from `OpenAI's gpt-5.4-mini model`
 
 ***Run reliable what-if scenarios through one workflow, detect budget risks earlier, and move from visibility to decision-ready optimization faster.***
@@ -42,7 +42,7 @@ Due to this existing feature gap, teams often resort to guesswork or manual esti
 
 - **Schema Validation** — Strict Pydantic v2 contracts (`extra="forbid"`, `Field()` validators) enforce month format (`YYYY-MM`), non-negative spend, positive budgets, and monthly-only allocation periods (`Monthly`).
 
-- **Holt's Dampened Trend Forecasting** — `/report` computes a 3-month forecast server-side using double exponential smoothing with a damping factor. A smoothed level and smoothed trend are updated on each observation; the damping factor (`φ`) decelerates projected growth across successive steps, producing a realistic curve rather than a straight-line extrapolation.
+- **Holt's Damped Trend Forecasting** — `/report` computes a 3-month forecast server-side using double exponential smoothing with a damping factor. A smoothed level and smoothed trend are updated on each observation; the damping factor (`φ`) decelerates projected growth across successive steps, producing a realistic curve rather than a straight-line extrapolation.
 
 - **LLM Analysis** — `/report` compiles cost history and requests observations alongside recommendations from OpenAI's `gpt-5.4-mini` model. When `OPENAI_API_KEY` is not set, a deterministic fallback is presented.
 
@@ -68,7 +68,7 @@ Due to this existing feature gap, teams often resort to guesswork or manual esti
 | Backend | FastAPI 0.135.1 (Python 3.12) |
 | Validation | Pydantic v2 |
 | Persistence | SQLite + SQLAlchemy 2.0 ORM |
-| Forecasting Algorithm | Holt's Dampened Trend — double exponential smoothing (server-side, zero dependencies) |
+| Forecasting Algorithm | Holt's Damped Trend — double exponential smoothing (server-side, zero dependencies) |
 | AI Analysis | OpenAI model (`gpt-5.4-mini`) with deterministic fallback |
 | Frontend | HTML/CSS/JS, Chart.js, Marked.js |
 | Containerization | Docker (multi-stage, non-root) |
@@ -95,7 +95,7 @@ Due to this existing feature gap, teams often resort to guesswork or manual esti
 
 - **SQLite for current phase** — Supports local-first development, rapid iteration, and zero operational overhead. The ORM abstraction makes migration to PostgreSQL or RDS seamless.
 
-- **Holt's Dampened Trend forecast owned by the backend** — Forecast logic lives exclusively in `ForecastEngine` in `main.py` and is returned as a typed `forecast` field on the `/report` response. The frontend only visualizes the data — no forecast computation in JavaScript. This keeps the algorithm in one auditable place and makes it easy to swap or tune.
+- **Holt's Damped Trend forecast owned by the backend** — Forecast logic lives exclusively in `ForecastEngine` in `main.py` and is returned as a typed `forecast` field on the `/report` response. The frontend only visualizes the data — no forecast computation in JavaScript. This keeps the algorithm in one auditable place and makes it easy to swap or tune.
 
 - **LLM with graceful fallback** — `/report` calls OpenAI's API for `gpt-5.4-mini` for analysis and recommendations. If no API key is configured at runtime or the call fails, deterministic in-app analysis ensures the product still works in local and CI environments.
 

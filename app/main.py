@@ -207,7 +207,7 @@ async def seed_demo_data(db: Session = Depends(get_db)):
 
 
 class ForecastEngine:
-    """Simple Holt's dampened trend forecasting engine."""
+    """Simple Holt's Damped trend forecasting engine."""
 
     def __init__(self, alpha: float = 0.4, beta: float = 0.3, phi: float = 0.85):
         self.alpha = alpha
@@ -315,7 +315,7 @@ class ReportService:
                 "- List explicit monthly budget spending/percentage utilization of budget in nested bullet points for better visibility"
                 "- 2-3 bullet points: the most important spending patterns with exact numbers\n\n"
                 "## 3-Month Forecast\n"
-                "- Ensure to highlight under heading: 'Holt's Dampened Trend algorithm was utilized for short-term forecasting'"
+                "- Ensure to highlight under heading: 'Holt's Damped Trend algorithm was utilized for short-term forecasting'"
                 "- Project spend for each of the next 3 months with dollar amounts\n"
                 "- State the projected budget breach month (if any) and the estimated overage\n\n"
                 "## Risk Assessment\n"
